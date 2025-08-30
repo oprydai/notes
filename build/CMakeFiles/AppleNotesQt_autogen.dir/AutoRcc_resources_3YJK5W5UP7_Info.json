@@ -1,0 +1,20 @@
+{
+	"BUILD_DIR" : "/media/mustafa/Data/Study/Projects/notes/build/AppleNotesQt_autogen",
+	"CMAKE_BINARY_DIR" : "/media/mustafa/Data/Study/Projects/notes/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/media/mustafa/Data/Study/Projects/notes/build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/media/mustafa/Data/Study/Projects/notes",
+	"CMAKE_SOURCE_DIR" : "/media/mustafa/Data/Study/Projects/notes",
+	"GENERATOR" : "Unix Makefiles",
+	"INCLUDE_DIR" : "/media/mustafa/Data/Study/Projects/notes/build/AppleNotesQt_autogen/include",
+	"INPUTS" : [ "/media/mustafa/Data/Study/Projects/notes/resources/styles/app.qss" ],
+	"LOCK_FILE" : "/media/mustafa/Data/Study/Projects/notes/build/CMakeFiles/AppleNotesQt_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "-name", "resources" ],
+	"OUTPUT_CHECKSUM" : "3YJK5W5UP7",
+	"OUTPUT_NAME" : "qrc_resources.cpp",
+	"RCC_EXECUTABLE" : "/usr/lib/qt5/bin/rcc",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "/media/mustafa/Data/Study/Projects/notes/build/CMakeFiles/AppleNotesQt_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Used.txt",
+	"SOURCE" : "/media/mustafa/Data/Study/Projects/notes/resources/resources.qrc",
+	"VERBOSITY" : 0
+}
