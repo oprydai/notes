@@ -1,5 +1,0 @@
-/media/mustafa/Data/Study/Projects/notes/build/CMakeFiles/Notes.dir
-/media/mustafa/Data/Study/Projects/notes/build/CMakeFiles/edit_cache.dir
-/media/mustafa/Data/Study/Projects/notes/build/CMakeFiles/rebuild_cache.dir
-/media/mustafa/Data/Study/Projects/notes/build/CMakeFiles/Notes_autogen_timestamp_deps.dir
-/media/mustafa/Data/Study/Projects/notes/build/CMakeFiles/Notes_autogen.dir
