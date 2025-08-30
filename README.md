@@ -7,7 +7,7 @@ A fast, native Linux note-taking application built with C++ and Qt. This reposit
 The Notes application has been successfully built and installed as a system package on Ubuntu. You can now:
 
 - **Launch**: Search for "Notes" in your applications menu or run `notes` from terminal
-- **Features**: All requested features implemented including drag & drop, auto-save, and Obsidian-like editor
+- **Features**: All requested features implemented including drag & drop, auto-save, and clean plain text editor
 - **Package**: Professional .deb package with proper system integration
 - **Documentation**: Complete build and usage instructions included below
 
@@ -278,7 +278,14 @@ src/
 
 ## Recent Updates
 
-### ✅ **Successfully Installed as System Package** (Latest)
+### ✅ **Converted to Plain Text Editor** (Latest)
+- **Simplified Editor**: Removed markdown support for clean, distraction-free text editing
+- **Removed Search Bar**: Cleaner toolbar without search functionality
+- **Basic Text Features**: Essential shortcuts and auto-save functionality
+- **Streamlined UI**: Focus on content creation without formatting complexity
+- **Maintained Core Features**: Auto-save, folder organization, drag & drop still work
+
+### ✅ **Successfully Installed as System Package**
 - **System Integration**: Notes application is now installed system-wide via .deb package
 - **Desktop Integration**: Appears in system applications menu with proper icon
 - **Terminal Access**: Can be launched with `notes` command from anywhere
@@ -298,12 +305,14 @@ src/
 - ✅ **Better Workflow**: Container actions before content actions
 - ✅ **Visual Separation**: Clear separators between action groups
 - ✅ **Intuitive Layout**: Follows natural note-taking workflow
+- ✅ **Removed Search Bar**: Cleaner interface without search functionality
 
 ### UI Polish
 - ✅ **Clean Note Display**: Notes list shows only title and date (no snippet text)
 - ✅ **White Title Bar**: Window title and control buttons styled in white
 - ✅ **Persistent Icons**: Folder icons remain after deletion operations
 - ✅ **Enhanced CSS**: Better visual states for drag and drop interactions
+- ✅ **Plain Text Editor**: Simple, distraction-free text editing experience
 
 ## Future Enhancements
 - [ ] Full-text search with highlighting

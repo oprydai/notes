@@ -28,8 +28,8 @@ set(PROJECT_SOURCES
   src/ui/NoteListDelegate.cpp
   src/ui/MarkdownHighlighter.h
   src/ui/MarkdownHighlighter.cpp
-  src/ui/MarkdownEditor.h
-  src/ui/MarkdownEditor.cpp
+      src/ui/TextEditor.h
+    src/ui/TextEditor.cpp
   src/ui/SettingsDialog.h
   src/ui/SettingsDialog.cpp
   src/ui/NotesModel.h

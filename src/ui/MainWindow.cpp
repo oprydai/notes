@@ -50,8 +50,7 @@
 #include "../db/DatabaseManager.h"
 #include "NoteListDelegate.h"
 #include "../utils/Roles.h"
-#include "MarkdownHighlighter.h"
-#include "MarkdownEditor.h"
+#include "TextEditor.h"
 #include "SettingsDialog.h"
 
 namespace {
@@ -83,8 +82,8 @@ MainWindow::MainWindow(QWidget *parent)
       m_mainSplitter(nullptr),
       m_folderTree(nullptr),
       m_noteList(nullptr),
-      m_mdEditor(nullptr),
-      m_mdPreview(nullptr),
+      m_textEditor(nullptr),
+  
       m_currentNoteId(-1),
       m_currentFolderId(-1),
       m_autoSaveTimer(new QTimer(this)),
@@ -223,24 +222,14 @@ void MainWindow::setupUi() {
     editorHeader->setStyleSheet("background: #2d2d2d; color: #e0e0e0; padding: 8px 12px; font-weight: 600; border-bottom: 1px solid #404040;");
     rightLayout->addWidget(editorHeader);
     
-    // Markdown Editor
-    auto *mdSplit = new QSplitter(Qt::Horizontal, rightPanel);
-    m_mdEditor = new MarkdownEditor(mdSplit);
-    m_mdEditor->setPlaceholderText("");
-    m_mdEditor->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-    m_mdEditor->setTabStopDistance(28);
-    m_mdEditor->setFont(QFont(QApplication::font().family(), 13));
+    // Text Editor
+    m_textEditor = new TextEditor(rightPanel);
+    m_textEditor->setPlaceholderText("Start typing your note...");
+    m_textEditor->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+    m_textEditor->setTabStopDistance(28);
+    m_textEditor->setFont(QFont(QApplication::font().family(), 13));
 
-    // Keep preview hidden for now
-    m_mdPreview = new QTextBrowser(mdSplit);
-    m_mdPreview->hide();
-    mdSplit->setStretchFactor(0, 1);
-    mdSplit->setStretchFactor(1, 0);
-
-    // Attach Markdown highlighter
-    m_mdHighlighter = new MarkdownHighlighter(m_mdEditor->document());
-
-    rightLayout->addWidget(mdSplit, 1);
+    rightLayout->addWidget(m_textEditor, 1);
     rightPanel->setLayout(rightLayout);
 
     // Add panels to splitter with better proportions
@@ -284,21 +273,16 @@ void MainWindow::setupUi() {
         statusBar->showMessage("Database connection failed", 5000);
     }
 
-    // Live markdown preview updates and text change detection
-    connect(m_mdEditor, &QTextEdit::textChanged, this, [this]() {
-        updateMarkdownPreview();
+    // Text change detection
+    connect(m_textEditor, &QTextEdit::textChanged, this, [this]() {
         if (m_currentNoteIndex.isValid()) {
             m_noteModified = true;
         }
     });
-    connect(m_mdEditor, &QTextEdit::cursorPositionChanged, this, [this]() {
-        m_mdHighlighter->setActiveBlockNumber(m_mdEditor->textCursor().blockNumber());
-        m_mdHighlighter->rehighlightBlock(m_mdEditor->textCursor().block());
-    });
 
     // Update word/character count
-    connect(m_mdEditor, &QTextEdit::textChanged, this, [this, wordCountLabel, charCountLabel, lineCountLabel]() {
-        QString text = m_mdEditor->toPlainText();
+    connect(m_textEditor, &QTextEdit::textChanged, this, [this, wordCountLabel, charCountLabel, lineCountLabel]() {
+        QString text = m_textEditor->toPlainText();
         int wordCount = text.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts).count();
         int charCount = text.length();
         int lineCount = text.count('\n') + 1;
@@ -377,9 +361,9 @@ void MainWindow::setupUi() {
                 m_actPinNote->setEnabled(true);
 
                 // Smooth fade animation
-                auto *effect = new QGraphicsOpacityEffect(m_mdEditor);
-                m_mdEditor->setGraphicsEffect(effect);
-                auto *fade = new QPropertyAnimation(effect, "opacity", m_mdEditor);
+                    auto *effect = new QGraphicsOpacityEffect(m_textEditor);
+    m_textEditor->setGraphicsEffect(effect);
+    auto *fade = new QPropertyAnimation(effect, "opacity", m_textEditor);
                 fade->setDuration(200);
                 fade->setStartValue(0.3);
                 fade->setEndValue(1.0);
@@ -498,8 +482,8 @@ void MainWindow::setupContextMenus() {
     });
     
     // Editor context menu
-    m_mdEditor->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(m_mdEditor, &QTextEdit::customContextMenuRequested, this, [this](const QPoint &pos) {
+    m_textEditor->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_textEditor, &QTextEdit::customContextMenuRequested, this, [this](const QPoint &pos) {
         QMenu menu(this);
         menu.setStyleSheet("QMenu { background: #2d2d2d; border: 1px solid #404040; border-radius: 8px; padding: 4px 0px; } "
                           "QMenu::item { padding: 8px 16px; border-radius: 4px; margin: 1px 4px; color: #e0e0e0; } "
@@ -509,106 +493,85 @@ void MainWindow::setupContextMenus() {
         // Standard text editing actions
         QAction *undoAction = menu.addAction("↶ Undo");
         undoAction->setShortcut(QKeySequence::Undo);
-        undoAction->setEnabled(m_mdEditor->document()->isUndoAvailable());
+        undoAction->setEnabled(m_textEditor->document()->isUndoAvailable());
         
         QAction *redoAction = menu.addAction("↷ Redo");
         redoAction->setShortcut(QKeySequence::Redo);
-        redoAction->setEnabled(m_mdEditor->document()->isRedoAvailable());
+        redoAction->setEnabled(m_textEditor->document()->isRedoAvailable());
         
         menu.addSeparator();
         
         QAction *cutAction = menu.addAction("✂️ Cut");
         cutAction->setShortcut(QKeySequence::Cut);
-        cutAction->setEnabled(m_mdEditor->textCursor().hasSelection());
+        cutAction->setEnabled(m_textEditor->textCursor().hasSelection());
         
         QAction *copyAction = menu.addAction("📋 Copy");
         copyAction->setShortcut(QKeySequence::Copy);
-        copyAction->setEnabled(m_mdEditor->textCursor().hasSelection());
+        copyAction->setEnabled(m_textEditor->textCursor().hasSelection());
         
         QAction *pasteAction = menu.addAction("📋 Paste");
         pasteAction->setShortcut(QKeySequence::Paste);
         
         menu.addSeparator();
         
-        // Markdown formatting actions
-        QAction *boldAction = menu.addAction("** Bold");
-        boldAction->setShortcut(QKeySequence("Ctrl+B"));
+        // Text editing actions
+        QAction *selectAllAction = menu.addAction("Select All");
+        selectAllAction->setShortcut(QKeySequence::SelectAll);
         
-        QAction *italicAction = menu.addAction("* Italic");
-        italicAction->setShortcut(QKeySequence("Ctrl+I"));
-        
-        QAction *codeAction = menu.addAction("` Code");
-        codeAction->setShortcut(QKeySequence("Ctrl+`"));
+        QAction *duplicateAction = menu.addAction("Duplicate");
+        duplicateAction->setShortcut(QKeySequence("Ctrl+D"));
         
         menu.addSeparator();
         
-        QAction *heading1Action = menu.addAction("# Heading 1");
-        QAction *heading2Action = menu.addAction("## Heading 2");
-        QAction *heading3Action = menu.addAction("### Heading 3");
+        QAction *upperAction = menu.addAction("UPPERCASE");
+        QAction *lowerAction = menu.addAction("lowercase");
+        QAction *titleAction = menu.addAction("Title Case");
         
         menu.addSeparator();
         
-        QAction *listAction = menu.addAction("- List Item");
         QAction *taskAction = menu.addAction("- [ ] Task");
         
-        QAction *selectedAction = menu.exec(m_mdEditor->mapToGlobal(pos));
+        QAction *selectedAction = menu.exec(m_textEditor->mapToGlobal(pos));
         
         // Handle text editing actions
         if (selectedAction == undoAction) {
-            m_mdEditor->undo();
+            m_textEditor->undo();
         } else if (selectedAction == redoAction) {
-            m_mdEditor->redo();
+            m_textEditor->redo();
         } else if (selectedAction == cutAction) {
-            m_mdEditor->cut();
+            m_textEditor->cut();
         } else if (selectedAction == copyAction) {
-            m_mdEditor->copy();
+            m_textEditor->copy();
         } else if (selectedAction == pasteAction) {
-            m_mdEditor->paste();
+            m_textEditor->paste();
         }
-        // Handle markdown formatting actions
-        else if (selectedAction == boldAction) {
-            QTextCursor cursor = m_mdEditor->textCursor();
-            if (cursor.hasSelection()) {
-                QString selected = cursor.selectedText();
-                cursor.insertText(QString("**%1**").arg(selected));
-            } else {
-                cursor.insertText("**bold text**");
+        // Handle basic text actions
+        else if (selectedAction == selectAllAction) {
+            QTextCursor cursor = m_textEditor->textCursor();
+            cursor.select(QTextCursor::Document);
+            m_textEditor->setTextCursor(cursor);
+        } else if (selectedAction == duplicateAction) {
+            QTextCursor cursor = m_textEditor->textCursor();
+            QString selectedText = cursor.selectedText();
+            if (selectedText.isEmpty()) {
+                cursor.select(QTextCursor::LineUnderCursor);
+                selectedText = cursor.selectedText();
             }
-        } else if (selectedAction == italicAction) {
-            QTextCursor cursor = m_mdEditor->textCursor();
-            if (cursor.hasSelection()) {
-                QString selected = cursor.selectedText();
-                cursor.insertText(QString("*%1*").arg(selected));
-            } else {
-                cursor.insertText("*italic text*");
-            }
-        } else if (selectedAction == codeAction) {
-            QTextCursor cursor = m_mdEditor->textCursor();
-            if (cursor.hasSelection()) {
-                QString selected = cursor.selectedText();
-                cursor.insertText(QString("`%1`").arg(selected));
-            } else {
-                cursor.insertText("`code`");
-            }
-        } else if (selectedAction == heading1Action) {
-            QTextCursor cursor = m_mdEditor->textCursor();
-            cursor.movePosition(QTextCursor::StartOfLine);
-            cursor.insertText("# ");
-        } else if (selectedAction == heading2Action) {
-            QTextCursor cursor = m_mdEditor->textCursor();
-            cursor.movePosition(QTextCursor::StartOfLine);
-            cursor.insertText("## ");
-        } else if (selectedAction == heading3Action) {
-            QTextCursor cursor = m_mdEditor->textCursor();
-            cursor.movePosition(QTextCursor::StartOfLine);
-            cursor.insertText("### ");
-        } else if (selectedAction == listAction) {
-            QTextCursor cursor = m_mdEditor->textCursor();
-            cursor.movePosition(QTextCursor::StartOfLine);
-            cursor.insertText("- ");
+            cursor.insertText(selectedText + selectedText);
+        } else if (selectedAction == upperAction) {
+            QTextCursor cursor = m_textEditor->textCursor();
+            QString selectedText = cursor.selectedText();
+            cursor.insertText(selectedText.toUpper());
+        } else if (selectedAction == lowerAction) {
+            QTextCursor cursor = m_textEditor->textCursor();
+            QString selectedText = cursor.selectedText();
+            cursor.insertText(selectedText.toLower());
+        } else if (selectedAction == titleAction) {
+            QTextCursor cursor = m_textEditor->textCursor();
+            QString selectedText = cursor.selectedText();
+            cursor.insertText(selectedText.toLower().replace(0, 1, selectedText[0].toUpper()));
         } else if (selectedAction == taskAction) {
-            QTextCursor cursor = m_mdEditor->textCursor();
-            cursor.movePosition(QTextCursor::StartOfLine);
+            QTextCursor cursor = m_textEditor->textCursor();
             cursor.insertText("- [ ] ");
         }
     });
@@ -694,7 +657,7 @@ void MainWindow::createNoteInCurrentFolder() {
         if (m_notesModel->rowCount() > 0) {
             QModelIndex newNoteIndex = m_notesModel->index(0, 0);
             m_noteList->setCurrentIndex(newNoteIndex);
-    m_mdEditor->setFocus();
+    m_textEditor->setFocus();
         }
     }
 }
@@ -751,26 +714,12 @@ void MainWindow::deleteSelectedFolder() {
     }
 }
 
-void MainWindow::updateMarkdownPreview() {
-    // Extremely simple Markdown rendering (headings, bold, italic, code) via regex/HTML
-    QString md = m_mdEditor->toPlainText();
-    // Replace basic markdown syntaxes (this is a placeholder; we can plug cmark later)
-    md.replace("&", "&amp;");
-    md.replace("<", "&lt;");
-    md.replace(">", "&gt;");
-    md.replace(QRegExp("^# (.*)$", Qt::CaseSensitive, QRegExp::RegExp2), "<h1>\\1</h1>");
-    md.replace(QRegExp("^## (.*)$", Qt::CaseSensitive, QRegExp::RegExp2), "<h2>\\1</h2>");
-    md.replace(QRegExp("\\n\\n"), "<br/><br/>");
-    md.replace(QRegExp("\\*\\*([^*]+)\\*\\*"), "<b>\\1</b>");
-    md.replace(QRegExp("\\*([^*]+)\\*"), "<i>\\1</i>");
-    md.replace(QRegExp("`([^`]+)`"), "<code>\\1</code>");
-    m_mdPreview->setHtml(md);
-}
+
 
 void MainWindow::saveCurrentNote() {
     if (m_currentNoteId <= 0) return;
     
-    QString content = m_mdEditor->toPlainText();
+    QString content = m_textEditor->toPlainText();
     
     // Extract title from first line
     QString title = "Untitled";
@@ -806,8 +755,7 @@ void MainWindow::loadNoteContent(const QModelIndex &index) {
     
     if (note.id > 0) {
         m_currentNoteId = note.id;
-        m_mdEditor->setPlainText(note.body);
-    updateMarkdownPreview();
+        m_textEditor->setPlainText(note.body);
     }
 }
 
@@ -898,7 +846,7 @@ void MainWindow::setupDatabaseConnections() {
     m_autoSaveTimer->setSingleShot(true);
     
     // Connect text changes to auto-save
-    connect(m_mdEditor, &QTextEdit::textChanged, this, &MainWindow::onTextChanged);
+    connect(m_textEditor, &QTextEdit::textChanged, this, &MainWindow::onTextChanged);
 }
 
 void MainWindow::loadFoldersFromDatabase() {
@@ -952,7 +900,7 @@ void MainWindow::onNoteDeleted(int noteId) {
         m_currentNoteId = -1;
         m_currentNoteIndex = QModelIndex();
         m_noteModified = false;
-        m_mdEditor->clear();
+        m_textEditor->clear();
     }
 }
 
@@ -967,7 +915,7 @@ void MainWindow::onFolderDeleted(int folderId) {
         m_currentNoteId = -1;
         m_currentNoteIndex = QModelIndex();
         m_noteModified = false;
-        m_mdEditor->clear();
+        m_textEditor->clear();
     }
     loadFoldersFromDatabase();
 }
@@ -1045,8 +993,7 @@ void MainWindow::onFolderSelected(const QModelIndex &index) {
     loadNotesFromDatabase(m_currentFolderId);
     
     // Clear the editor
-    m_mdEditor->clear();
-    updateMarkdownPreview();
+    m_textEditor->clear();
     
     // Update pin button state
     m_actPinNote->setEnabled(false);

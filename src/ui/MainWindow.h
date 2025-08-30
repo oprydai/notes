@@ -17,8 +17,7 @@ class QComboBox;
 class QPlainTextEdit;
 class QTextBrowser;
 class QLineEdit;
-class MarkdownHighlighter;
-class MarkdownEditor;
+class TextEditor;
 class SettingsDialog;
 
 class MainWindow : public QMainWindow {
@@ -47,7 +46,7 @@ private:
     void deleteSelectedNote();
     void createNewFolder();
     void deleteSelectedFolder();
-    void updateMarkdownPreview();
+
     void setupContextMenus();
     void saveCurrentNote();
     void loadNoteContent(const QModelIndex &index);
@@ -70,10 +69,8 @@ private:
     QSplitter *m_mainSplitter;
     QTreeView *m_folderTree;
     QListView *m_noteList;
-    // Markdown editor + preview
-    MarkdownEditor *m_mdEditor;
-    QTextBrowser *m_mdPreview;
-    MarkdownHighlighter *m_mdHighlighter;
+    // Text editor
+    TextEditor *m_textEditor;
 
     QToolBar *m_toolbar;
     QAction *m_actNewNote;
