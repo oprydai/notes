@@ -55,3 +55,11 @@ Thumbs.db
 
 # Log files
 *.log
+
+# Debian packaging generated files
+debian/.debhelper/
+debian/files
+debian/notes.debhelper.log
+debian/notes.substvars
+debian/debhelper-build-stamp
+debian/notes/

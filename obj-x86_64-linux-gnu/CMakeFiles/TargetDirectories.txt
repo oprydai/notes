@@ -1,5 +1,0 @@
-/media/mustafa/Data/Study/Projects/notes/obj-x86_64-linux-gnu/CMakeFiles/Notes.dir
-/media/mustafa/Data/Study/Projects/notes/obj-x86_64-linux-gnu/CMakeFiles/edit_cache.dir
-/media/mustafa/Data/Study/Projects/notes/obj-x86_64-linux-gnu/CMakeFiles/rebuild_cache.dir
-/media/mustafa/Data/Study/Projects/notes/obj-x86_64-linux-gnu/CMakeFiles/Notes_autogen_timestamp_deps.dir
-/media/mustafa/Data/Study/Projects/notes/obj-x86_64-linux-gnu/CMakeFiles/Notes_autogen.dir
