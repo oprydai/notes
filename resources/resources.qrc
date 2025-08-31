@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="/">
     <file>styles/app.qss</file>
+    <file>icons/notes.svg</file>
   </qresource>
 </RCC>
 

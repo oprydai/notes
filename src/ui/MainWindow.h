@@ -38,6 +38,7 @@ private slots:
     
     // Event handling
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 
 private:
     void setupUi();

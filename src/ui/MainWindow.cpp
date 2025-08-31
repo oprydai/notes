@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QSplitter>
+#include <QFile>
 #include <QTreeView>
 #include <QListView>
 #include <QTextEdit>
@@ -90,8 +91,35 @@ MainWindow::MainWindow(QWidget *parent)
       m_autoSaveEnabled(true),
       m_folderModel(new QStandardItemModel(this)),
       m_notesModel(new NotesModel(this)) {
-    setWindowTitle("Notes");
+    setWindowTitle("Notes - Orchard");
     setMinimumSize(800, 600);
+    
+    // Set WM_CLASS for proper desktop integration
+    setObjectName("Notes");
+    setProperty("WM_CLASS", "Notes");
+    
+    // Set the window title to match the expected WM_CLASS
+    setWindowTitle("Notes");
+    
+    // Set a unique window identifier for proper desktop integration
+    setWindowFilePath("notes://");
+    setWindowRole("notes-editor");
+    
+    // Set a unique window identifier for better desktop integration
+    // Note: _NET_WM_PID is automatically set by Qt
+    
+    // Set X11 window hints for proper desktop integration (Qt5 compatible)
+    #ifdef Q_OS_LINUX
+    // Window manager integration is handled via window title, icon, and WM_CLASS
+    // Set the WM_CLASS property explicitly
+    setProperty("_NET_WM_CLASS", "Notes");
+    #endif
+    
+    // Set window icon using multiple fallback methods
+    QIcon windowIcon;
+    windowIcon = QIcon(":/icons/notes.svg");
+    setWindowIcon(windowIcon);
+    
     setupUi();
     setupStyle();
     setupDatabaseConnections();
@@ -1116,6 +1144,13 @@ void MainWindow::restoreFolderSelection() {
         m_folderTree->setCurrentIndex(m_originalFolderSelection);
         m_originalFolderSelection = QModelIndex();
     }
+}
+
+void MainWindow::showEvent(QShowEvent *event) {
+    QMainWindow::showEvent(event);
+    
+    // Ensure the window icon is set properly after the window is shown
+    setWindowIcon(QIcon(":/icons/notes.svg"));
 }
 
 

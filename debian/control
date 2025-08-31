@@ -1,7 +1,7 @@
 Source: notes
 Section: editors
 Priority: optional
-Maintainer: Your Name <your.email@example.com>
+Maintainer: Your Name <mustafakhann050@gmail.com>
 Build-Depends: debhelper (>= 11), cmake (>= 3.16), qtbase5-dev (>= 5.15), pkg-config
 
 Package: notes

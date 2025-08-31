@@ -2,15 +2,6 @@
 
 A fast, native Linux note-taking application built with C++ and Qt. This repository features a 3-pane layout using `QSplitter`, with SQLite persistence, auto-save functionality, and a clean plain text editor.
 
-## 🎉 **Status: Successfully Installed & Ready to Use!**
-
-The Notes application has been successfully built and installed as a system package on Ubuntu. You can now:
-
-- **Launch**: Search for "Notes" in your applications menu or run `notes` from terminal
-- **Features**: All requested features implemented including drag & drop, auto-save, and clean plain text editor
-- **Package**: Professional .deb package with proper system integration
-- **Documentation**: Complete build and usage instructions included below
-
 ## Features
 
 ### ✨ Core Features
