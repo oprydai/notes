@@ -18,7 +18,6 @@ struct NoteData {
     QString body;
     QDateTime createdAt;
     QDateTime updatedAt;
-    bool pinned;
 };
 
 struct FolderData {

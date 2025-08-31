@@ -26,7 +26,7 @@ void NoteListDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const
     const QString title = idx.data(Qt::DisplayRole).toString();
     const QString snippet = idx.data(Roles::NoteSnippetRole).toString();
     const QDateTime date = idx.data(Roles::NoteDateRole).toDateTime();
-    const bool pinned = idx.data(Roles::NotePinnedRole).toBool();
+
 
     // Create rounded rectangle for the note item
     QRect itemRect = option.rect.adjusted(4, 2, -4, -2);
@@ -47,22 +47,7 @@ void NoteListDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const
     // Content area
     QRect contentRect = itemRect.adjusted(16, 12, -16, -12);
     
-    // Pin indicator
-    if (pinned) {
-        QPainterPath pinPath;
-        QRect pinRect(contentRect.left(), contentRect.top(), 16, 16);
-        pinPath.addEllipse(pinRect);
-        p->fillPath(pinPath, QColor(255, 193, 7));
-        p->setPen(QPen(QColor(255, 193, 7), 1));
-        p->drawPath(pinPath);
-        
-        // Pin icon (simplified)
-        p->setPen(QColor(0, 0, 0));
-        p->setFont(QFont("Arial", 8, QFont::Bold));
-        p->drawText(pinRect, Qt::AlignCenter, "📌");
-        
-        contentRect.setLeft(contentRect.left() + 24);
-    }
+
 
     // Title
     QFont titleFont = option.font;

@@ -51,9 +51,7 @@ private:
     void setupContextMenus();
     void saveCurrentNote();
     void loadNoteContent(const QModelIndex &index);
-    void pinNote(const QModelIndex &index);
-    void unpinNote(const QModelIndex &index);
-    void togglePinNote(const QModelIndex &index);
+
     void onFolderSelected(const QModelIndex &index);
     void createNoteInCurrentFolder();
     void setupDatabaseConnections();
@@ -76,7 +74,7 @@ private:
     QToolBar *m_toolbar;
     QAction *m_actNewNote;
     QAction *m_actDeleteNote;
-    QAction *m_actPinNote;
+
     QAction *m_actNewFolder;
     QAction *m_actDeleteFolder;
     QAction *m_actSettings;

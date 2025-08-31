@@ -87,7 +87,6 @@ CREATE TABLE IF NOT EXISTS notes (
   body TEXT NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  pinned INTEGER NOT NULL DEFAULT 0,
   FOREIGN KEY(folder_id) REFERENCES folders(id) ON DELETE CASCADE
 );
 
@@ -205,6 +204,8 @@ bool DatabaseManager::updateNote(int noteId, const QString &title, const QString
     return true;
 }
 
+
+
 bool DatabaseManager::deleteNote(int noteId) {
     QSqlQuery q(m_db);
     q.prepare("DELETE FROM notes WHERE id = ?");
@@ -221,7 +222,7 @@ bool DatabaseManager::deleteNote(int noteId) {
 
 NoteData DatabaseManager::getNote(int noteId) {
     QSqlQuery q(m_db);
-    q.prepare("SELECT id, folder_id, title, body, created_at, updated_at, pinned FROM notes WHERE id = ?");
+    q.prepare("SELECT id, folder_id, title, body, created_at, updated_at FROM notes WHERE id = ?");
     q.addBindValue(noteId);
     
     NoteData note;
@@ -234,7 +235,6 @@ NoteData DatabaseManager::getNote(int noteId) {
         note.body = q.value(3).toString();
         note.createdAt = q.value(4).toDateTime();
         note.updatedAt = q.value(5).toDateTime();
-        note.pinned = q.value(6).toBool();
     }
     
     return note;
@@ -243,7 +243,7 @@ NoteData DatabaseManager::getNote(int noteId) {
 QList<NoteData> DatabaseManager::getNotesInFolder(int folderId) {
     QList<NoteData> notes;
     QSqlQuery q(m_db);
-    q.prepare("SELECT id, folder_id, title, body, created_at, updated_at, pinned FROM notes WHERE folder_id = ? ORDER BY pinned DESC, updated_at DESC");
+    q.prepare("SELECT id, folder_id, title, body, created_at, updated_at FROM notes WHERE folder_id = ? ORDER BY updated_at DESC");
     q.addBindValue(folderId);
     
     if (q.exec()) {
@@ -255,7 +255,6 @@ QList<NoteData> DatabaseManager::getNotesInFolder(int folderId) {
             note.body = q.value(3).toString();
             note.createdAt = q.value(4).toDateTime();
             note.updatedAt = q.value(5).toDateTime();
-            note.pinned = q.value(6).toBool();
             notes.append(note);
         }
     }
@@ -509,7 +508,7 @@ void DatabaseManager::populateNotesModel(QStandardItemModel *model, int folderId
         item->setData(note.id, Qt::UserRole);
         item->setData(note.body, Qt::UserRole + 1); // Note content
         item->setData(note.updatedAt, Qt::UserRole + 2); // Date
-        item->setData(note.pinned, Qt::UserRole + 3); // Pinned
+
         
         // Create snippet from body
         QString snippet = note.body;

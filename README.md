@@ -19,7 +19,6 @@ A fast, native Linux note-taking application built with C++ and Qt. This reposit
   - `Ctrl+N`: New note
   - `Ctrl+S`: Save (manual save)
   - `Delete`: Delete selected note/folder
-  - `Ctrl+P`: Pin/unpin note
   - `Ctrl+D`: Duplicate line
   - `Ctrl+L`: Select current line
   - `Ctrl+Home/End`: Start/End of line
@@ -27,9 +26,7 @@ A fast, native Linux note-taking application built with C++ and Qt. This reposit
 
 ### 🗂️ Organization Features
 - **Folder Management**: Create, rename, delete folders
-- **Note Management**: Create, edit, delete, pin notes
-- **Search**: Real-time search through notes
-- **Pinning**: Pin important notes to the top
+- **Note Management**: Create, edit, delete notes
 - **Import/Export**: Import text files and export notes
 - **Drag & Drop**: Move notes between folders with visual feedback
   - **Visual Feedback**: Folders highlight when dragging notes over them
@@ -40,8 +37,8 @@ A fast, native Linux note-taking application built with C++ and Qt. This reposit
 - **Modern Dark Theme**: Apple Notes-inspired design
 - **Reordered Toolbar**: Logical layout with folder actions first
   - **Leftmost**: New Folder, Delete Folder
-  - **Center**: New Note, Delete, Pin/Unpin
-  - **Right**: Settings, Search, Preview Toggle
+  - **Center**: New Note, Delete
+  - **Right**: Settings
 - **Clean Note Display**: Notes list shows only title and date
 - **White Title Bar**: Window title and control buttons in white
 - **Persistent Icons**: Folder icons remain after deletion operations
@@ -207,15 +204,13 @@ dpkg-buildpackage -b -us -uc -tc
 - `Ctrl+N`: New note
 - `Ctrl+S`: Save (manual save)
 - `Delete`: Delete selected note/folder
-- `Ctrl+P`: Pin/unpin note
-- `Ctrl+F`: Focus search
 - `Ctrl+Shift+N`: New folder
 
 ## Architecture
 
 ### Database Schema
 - **folders**: Folder hierarchy with parent-child relationships
-- **notes**: Note content with metadata (title, body, timestamps, pinned status)
+- **notes**: Note content with metadata (title, body, timestamps)
 - **tags**: Tag system for note organization
 - **note_tags**: Many-to-many relationship between notes and tags
 - **attachments**: File attachments support
@@ -271,7 +266,7 @@ src/
 
 ### ✅ **Converted to Plain Text Editor** (Latest)
 - **Simplified Editor**: Removed markdown support for clean, distraction-free text editing
-- **Removed Search Bar**: Cleaner toolbar without search functionality
+- **Removed Pin/Unpin Feature**: Cleaner interface without pinning functionality
 - **Basic Text Features**: Essential shortcuts and auto-save functionality
 - **Streamlined UI**: Focus on content creation without formatting complexity
 - **Maintained Core Features**: Auto-save, folder organization, drag & drop still work
@@ -296,7 +291,7 @@ src/
 - ✅ **Better Workflow**: Container actions before content actions
 - ✅ **Visual Separation**: Clear separators between action groups
 - ✅ **Intuitive Layout**: Follows natural note-taking workflow
-- ✅ **Removed Search Bar**: Cleaner interface without search functionality
+- ✅ **Removed Pin/Unpin Button**: Cleaner interface without pinning functionality
 
 ### UI Polish
 - ✅ **Clean Note Display**: Notes list shows only title and date (no snippet text)
@@ -306,7 +301,6 @@ src/
 - ✅ **Plain Text Editor**: Simple, distraction-free text editing experience
 
 ## Future Enhancements
-- [ ] Full-text search with highlighting
 - [ ] Tag system implementation
 - [ ] File attachments support
 - [ ] Note templates

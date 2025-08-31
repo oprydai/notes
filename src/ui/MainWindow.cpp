@@ -48,6 +48,7 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDragLeaveEvent>
+#include <QDebug>
 #include "../db/DatabaseManager.h"
 #include "NoteListDelegate.h"
 #include "../utils/Roles.h"
@@ -158,15 +159,7 @@ void MainWindow::setupUi() {
     m_actDeleteNote->setShortcut(QKeySequence::Delete);
     m_actDeleteNote->setToolTip("Delete selected note (Del)");
     
-    // Pin/Unpin action
-    m_actPinNote = m_toolbar->addAction(createIcon("📌"), "Pin/Unpin", this, [this]() {
-        QModelIndex current = m_noteList->currentIndex();
-        if (current.isValid()) {
-            togglePinNote(current);
-        }
-    });
-    m_actPinNote->setShortcut(QKeySequence("Ctrl+P"));
-    m_actPinNote->setToolTip("Pin/Unpin selected note (Ctrl+P)");
+
     
     m_toolbar->addSeparator();
     
@@ -354,14 +347,7 @@ void MainWindow::setupUi() {
     }
     m_noteList->setFont(listFont);
     
-    // Add keyboard shortcuts for pinning
-    auto *pinShortcut = new QShortcut(QKeySequence("Ctrl+P"), this);
-    connect(pinShortcut, &QShortcut::activated, this, [this]() {
-        QModelIndex current = m_noteList->currentIndex();
-        if (current.isValid()) {
-            togglePinNote(current);
-        }
-    });
+
 
     // Enhanced note selection with smooth transitions
     connect(m_noteList->selectionModel(), &QItemSelectionModel::currentChanged, this,
@@ -374,7 +360,7 @@ void MainWindow::setupUi() {
                 if (!current.isValid()) {
                     m_currentNoteIndex = QModelIndex();
                     m_noteModified = false;
-                    m_actPinNote->setEnabled(false);
+            
                     return;
                 }
                 
@@ -382,11 +368,7 @@ void MainWindow::setupUi() {
                 m_noteModified = false;
                 loadNoteContent(current);
                 
-                // Update pin button state
-                bool isPinned = current.data(Roles::NotePinnedRole).toBool();
-                m_actPinNote->setText(isPinned ? "Unpin" : "Pin");
-                m_actPinNote->setIcon(createIcon("📌", isPinned ? QColor(255, 193, 7) : QColor(224, 224, 224)));
-                m_actPinNote->setEnabled(true);
+                
 
                 // Smooth fade animation
                     auto *effect = new QGraphicsOpacityEffect(m_textEditor);
@@ -472,11 +454,6 @@ void MainWindow::setupContextMenus() {
         
         menu.addSeparator();
         
-        QAction *pinAction = menu.addAction("📌 Pin Note");
-        QAction *unpinAction = menu.addAction("📌 Unpin Note");
-        
-        menu.addSeparator();
-        
         QAction *deleteAction = menu.addAction("🗑️ Delete Note");
         deleteAction->setShortcut(QKeySequence::Delete);
         
@@ -487,12 +464,7 @@ void MainWindow::setupContextMenus() {
         deleteAction->setEnabled(hasSelection);
         
         if (hasSelection) {
-            bool isPinned = index.data(Roles::NotePinnedRole).toBool();
-            pinAction->setVisible(!isPinned);
-            unpinAction->setVisible(isPinned);
-        } else {
-            pinAction->setVisible(false);
-            unpinAction->setVisible(false);
+            // Note-specific actions when a note is selected
         }
         
         QAction *selectedAction = menu.exec(m_noteList->mapToGlobal(pos));
@@ -502,8 +474,6 @@ void MainWindow::setupContextMenus() {
         } else if (selectedAction == duplicateAction) {
             // TODO: Implement duplicate functionality
             QMessageBox::information(this, "Duplicate", "Duplicate functionality coming soon!");
-        } else if (selectedAction == pinAction || selectedAction == unpinAction) {
-            togglePinNote(index);
         } else if (selectedAction == deleteAction) {
             deleteSelectedNote();
         }
@@ -787,77 +757,7 @@ void MainWindow::loadNoteContent(const QModelIndex &index) {
     }
 }
 
-void MainWindow::pinNote(const QModelIndex &index) {
-    if (!index.isValid()) return;
-    
-    auto *model = qobject_cast<QStandardItemModel*>(m_noteList->model());
-    if (!model) return;
-    
-    QStandardItem *item = model->itemFromIndex(index);
-    if (!item) return;
-    
-    item->setData(true, Roles::NotePinnedRole);
-    
-    // Move pinned note to top of pinned notes
-    int currentRow = index.row();
-    int targetRow = 0;
-    
-    // Find the position after the last pinned note
-    for (int i = 0; i < model->rowCount(); ++i) {
-        QStandardItem *checkItem = model->item(i);
-        if (checkItem && checkItem->data(Roles::NotePinnedRole).toBool()) {
-            targetRow = i + 1;
-        }
-    }
-    
-    // If this note is not already at the correct position, move it
-    if (currentRow != targetRow - 1) {
-        QList<QStandardItem*> rowItems = model->takeRow(currentRow);
-        model->insertRow(targetRow - 1, rowItems);
-        
-        // Update selection to follow the moved item
-        QModelIndex newIndex = model->index(targetRow - 1, 0);
-        m_noteList->setCurrentIndex(newIndex);
-    }
-    
-    // Force a visual update
-    m_noteList->viewport()->update();
-}
 
-void MainWindow::unpinNote(const QModelIndex &index) {
-    if (!index.isValid()) return;
-    
-    auto *model = qobject_cast<QStandardItemModel*>(m_noteList->model());
-    if (!model) return;
-    
-    QStandardItem *item = model->itemFromIndex(index);
-    if (!item) return;
-    
-    item->setData(false, Roles::NotePinnedRole);
-    
-    // Move unpinned note to the end (after all pinned notes)
-    int currentRow = index.row();
-    int pinnedCount = 0;
-    
-    // Count pinned notes
-    for (int i = 0; i < model->rowCount(); ++i) {
-        QStandardItem *checkItem = model->item(i);
-        if (checkItem && checkItem->data(Roles::NotePinnedRole).toBool()) {
-            pinnedCount++;
-        }
-    }
-    
-    // Move the note to the end
-    QList<QStandardItem*> rowItems = model->takeRow(currentRow);
-    model->appendRow(rowItems);
-    
-    // Update selection to follow the moved item
-    QModelIndex newIndex = model->index(model->rowCount() - 1, 0);
-    m_noteList->setCurrentIndex(newIndex);
-    
-    // Force a visual update
-    m_noteList->viewport()->update();
-}
 
 void MainWindow::setupDatabaseConnections() {
     DatabaseManager &db = DatabaseManager::instance();
@@ -984,24 +884,7 @@ void MainWindow::showSettings() {
     }
 }
 
-void MainWindow::togglePinNote(const QModelIndex &index) {
-    if (!index.isValid()) return;
-    
-    bool isPinned = index.data(Roles::NotePinnedRole).toBool();
-    
-    if (isPinned) {
-        unpinNote(index);
-    } else {
-        pinNote(index);
-    }
-    
-    // Update pin button state if this is the currently selected note
-    if (index == m_currentNoteIndex) {
-        bool newPinnedState = !isPinned;
-        m_actPinNote->setText(newPinnedState ? "Unpin" : "Pin");
-        m_actPinNote->setIcon(createIcon("📌", newPinnedState ? QColor(255, 193, 7) : QColor(224, 224, 224)));
-    }
-}
+
 
 void MainWindow::onFolderSelected(const QModelIndex &index) {
     if (!index.isValid()) return;
@@ -1024,7 +907,7 @@ void MainWindow::onFolderSelected(const QModelIndex &index) {
     m_textEditor->clear();
     
     // Update pin button state
-    m_actPinNote->setEnabled(false);
+    
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
