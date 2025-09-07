@@ -54,6 +54,9 @@
 #include "../utils/Roles.h"
 #include "TextEditor.h"
 #include "SettingsDialog.h"
+#include "../sync/SyncManager.h"
+#include "../sync/ConfigLoader.h"
+#include "GoogleAuthDialog.h"
 
 namespace {
 static QString readResourceText(const QString &path) {
@@ -91,9 +94,11 @@ MainWindow::MainWindow(QWidget *parent)
       m_autoSaveTimer(new QTimer(this)),
       m_autoSaveEnabled(true),
       m_folderModel(new QStandardItemModel(this)),
-      m_notesModel(new NotesModel(this)) {
+      m_notesModel(new NotesModel(this)),
+      m_syncManager(nullptr) {
     setWindowTitle("Notes - Orchard");
-    setMinimumSize(800, 600);
+    setMinimumSize(1200, 800);  // Increased minimum size for all toolbar buttons
+    resize(1400, 900);  // Set default window size
     
     // Set WM_CLASS for proper desktop integration
     setObjectName("Notes");
@@ -124,6 +129,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupUi();
     setupStyle();
     setupDatabaseConnections();
+    setupGoogleDriveSync();
     
     // Set window title bar colors for Linux
     #ifdef Q_OS_LINUX
@@ -139,6 +145,7 @@ void MainWindow::setupUi() {
     m_toolbar->setMovable(false);
     m_toolbar->setIconSize(QSize(16, 16));
     m_toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_toolbar->setMinimumHeight(40);  // Ensure toolbar has enough height
     addToolBar(Qt::TopToolBarArea, m_toolbar);
     
     // Folder actions (leftmost)
@@ -169,12 +176,54 @@ void MainWindow::setupUi() {
     
     m_toolbar->addSeparator();
     
+    // Google Drive Sync actions
+    m_actConnectGoogleDrive = m_toolbar->addAction(createIcon("☁"), "Connect to Google Drive", this, &MainWindow::onGoogleDriveConnect);
+    m_actConnectGoogleDrive->setToolTip("Connect to Google Drive for cloud sync");
+    
+    m_actSyncNow = m_toolbar->addAction(createIcon("🔄"), "Sync Now", this, &MainWindow::onSyncNow);
+    m_actSyncNow->setToolTip("Sync notes with Google Drive now");
+    m_actSyncNow->setEnabled(false);
+    m_actSyncNow->setVisible(false);  // Initially hidden
+    
+    m_actSyncSettings = m_toolbar->addAction(createIcon("⚙"), "Sync Settings", this, &MainWindow::onSyncSettings);
+    m_actSyncSettings->setToolTip("Configure Google Drive sync settings");
+    m_actSyncSettings->setEnabled(false);
+    m_actSyncSettings->setVisible(false);  // Initially hidden
+    
+    // Debug: Check if actions were created
+    qDebug() << "Sync actions created:";
+    qDebug() << "  Connect action:" << (m_actConnectGoogleDrive ? "YES" : "NO");
+    qDebug() << "  Sync Now action:" << (m_actSyncNow ? "YES" : "NO");
+    qDebug() << "  Sync Settings action:" << (m_actSyncSettings ? "YES" : "NO");
+    qDebug() << "  Toolbar actions count:" << m_toolbar->actions().count();
+    
+    // Debug: Check action properties
+    if (m_actSyncNow) {
+        qDebug() << "  Sync Now action text:" << m_actSyncNow->text();
+        qDebug() << "  Sync Now action visible:" << m_actSyncNow->isVisible();
+        qDebug() << "  Sync Now action enabled:" << m_actSyncNow->isEnabled();
+    }
+    
+    m_toolbar->addSeparator();
+    
     // View toggle button (for future preview mode)
     auto *viewToggle = new QToolButton(m_toolbar);
     viewToggle->setText("👁");
     viewToggle->setToolTip("Toggle preview mode");
     viewToggle->setCheckable(true);
     m_toolbar->addWidget(viewToggle);
+    
+    // Debug: List all toolbar actions
+    qDebug() << "All toolbar actions:";
+    for (QAction *action : m_toolbar->actions()) {
+        qDebug() << "  -" << action->text() << "(" << action->isVisible() << "enabled:" << action->isEnabled() << ")";
+    }
+    
+    // Debug: Check if sync actions are in toolbar
+    qDebug() << "Sync actions in toolbar:";
+    qDebug() << "  Connect action in toolbar:" << m_toolbar->actions().contains(m_actConnectGoogleDrive);
+    qDebug() << "  Sync Now action in toolbar:" << m_toolbar->actions().contains(m_actSyncNow);
+    qDebug() << "  Sync Settings action in toolbar:" << m_toolbar->actions().contains(m_actSyncSettings);
 
     m_mainSplitter = new QSplitter(Qt::Horizontal, this);
     setCentralWidget(m_mainSplitter);
@@ -285,6 +334,12 @@ void MainWindow::setupUi() {
     auto *lineCountLabel = new QLabel("Lines: 1", statusBar);
     lineCountLabel->setStyleSheet("color: #999999; padding: 0 8px;");
     statusBar->addPermanentWidget(lineCountLabel);
+    
+    // Sync status label
+    auto *syncStatusLabel = new QLabel("Sync: Not Connected", statusBar);
+    syncStatusLabel->setStyleSheet("color: #999999; padding: 0 8px;");
+    statusBar->addPermanentWidget(syncStatusLabel);
+    syncStatusLabel->setObjectName("syncStatusLabel");
 
     // Initialize database
     if (DatabaseManager::instance().open()) {
@@ -413,6 +468,10 @@ void MainWindow::setupContextMenus() {
         QAction *expandAllAction = menu.addAction("📂 Expand All");
         QAction *collapseAllAction = menu.addAction("📁 Collapse All");
         
+        menu.addSeparator();
+        
+        QAction *importAction = menu.addAction("📥 Import Markdown Files");
+        
         // Enable/disable actions based on selection
         QModelIndex index = m_folderTree->indexAt(pos);
         bool hasSelection = index.isValid();
@@ -432,6 +491,8 @@ void MainWindow::setupContextMenus() {
             m_folderTree->expandAll();
         } else if (selectedAction == collapseAllAction) {
             m_folderTree->collapseAll();
+        } else if (selectedAction == importAction) {
+            manualImportMarkdownFiles();
         }
     });
     
@@ -816,6 +877,24 @@ void MainWindow::importReadmeFiles() {
     }
 }
 
+void MainWindow::manualImportMarkdownFiles() {
+    DatabaseManager &db = DatabaseManager::instance();
+    QString notesDir = db.getNotesDirectory();
+    
+    // Force import even if auto-import is disabled
+    db.manualImportMarkdownFiles();
+    
+    // Reload folders to show any new "Imported" folder
+    loadFoldersFromDatabase();
+    
+    // Reload notes if we're in the Imported folder
+    if (m_currentFolderId > 0) {
+        loadNotesFromDatabase(m_currentFolderId);
+    }
+    
+    statusBar()->showMessage("Markdown files imported successfully", 3000);
+}
+
 void MainWindow::onNoteSaved(int noteId) {
     if (noteId == m_currentNoteId) {
         m_noteModified = false;
@@ -874,11 +953,14 @@ void MainWindow::showSettings() {
         db.setNotesDirectory(dialog.getNotesDirectory());
         db.enableAutoSave(dialog.isAutoSaveEnabled());
         db.setAutoSaveInterval(dialog.getAutoSaveInterval());
+        db.setAutoImportEnabled(dialog.isAutoImportEnabled());
         
         m_autoSaveEnabled = dialog.isAutoSaveEnabled();
         
-        // Import README files from the new directory
-        importReadmeFiles();
+        // Import README files from the new directory (only if auto-import is enabled)
+        if (dialog.isAutoImportEnabled()) {
+            importReadmeFiles();
+        }
         
         statusBar()->showMessage("Settings saved", 3000);
     }
@@ -1034,6 +1116,119 @@ void MainWindow::showEvent(QShowEvent *event) {
     
     // Ensure the window icon is set properly after the window is shown
     setWindowIcon(QIcon(":/icons/notes.svg"));
+}
+
+// Google Drive Sync Implementation
+void MainWindow::setupGoogleDriveSync()
+{
+    // Ensure ConfigLoader is loaded first
+    if (!ConfigLoader::instance().loadConfig()) {
+        qWarning() << "Failed to load Google Drive configuration";
+        qWarning() << "Errors:" << ConfigLoader::instance().getValidationErrors();
+    }
+    
+    // Initialize the sync manager using the singleton DatabaseManager
+    m_syncManager = new SyncManager(&DatabaseManager::instance(), this);
+    
+    // Connect sync manager signals
+    connect(m_syncManager, &SyncManager::authenticationChanged, this, &MainWindow::onSyncStatusChanged);
+    connect(m_syncManager, &SyncManager::syncStarted, this, &MainWindow::onSyncStatusChanged);
+    connect(m_syncManager, &SyncManager::syncCompleted, this, &MainWindow::onSyncStatusChanged);
+    connect(m_syncManager, &SyncManager::syncFailed, this, &MainWindow::onSyncError);
+    
+    // Connect to show success when folder is created
+    
+    
+    // Update initial sync status
+    onSyncStatusChanged();
+}
+
+void MainWindow::onGoogleDriveConnect()
+{
+    if (m_syncManager && m_syncManager->isAuthenticated()) {
+        // Already connected - show disconnect option
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this, 
+            "Google Drive", 
+            "You are already connected to Google Drive. Would you like to disconnect?",
+            QMessageBox::Yes | QMessageBox::No
+        );
+        
+        if (reply == QMessageBox::Yes) {
+            m_syncManager->logout();
+        }
+    } else {
+        // Show the actual Google authentication dialog
+        GoogleAuthDialog dialog(this);
+        if (dialog.exec() == QDialog::Accepted) {
+            QString authCode = dialog.getAuthCode();
+            
+                    // Exchange auth code for tokens via SyncManager
+        if (m_syncManager) {
+            // Complete the OAuth flow by exchanging the auth code for tokens
+            m_syncManager->completeOAuth(authCode);
+        }
+        }
+    }
+}
+
+void MainWindow::onSyncNow()
+{
+    if (m_syncManager && !m_syncManager->isSyncing()) {
+        qDebug() << "Sync Now button clicked - starting full sync";
+        m_syncManager->syncAllNotes();
+    }
+}
+
+void MainWindow::onSyncSettings()
+{
+    QMessageBox::information(this, "Sync Settings", "Google Drive sync settings:\n\n- Auto-sync: Every 15 minutes\n- Conflict resolution: Automatic\n- File format: Markdown (.md)\n\nFull settings dialog not yet implemented.");
+}
+
+void MainWindow::onSyncStatusChanged()
+{
+    if (!m_syncManager) return;
+    
+    bool isConnected = m_syncManager->isAuthenticated();
+    bool isSyncing = m_syncManager->isSyncing();
+    
+    qDebug() << "MainWindow::onSyncStatusChanged - isConnected:" << isConnected << "isSyncing:" << isSyncing;
+    
+    // Update toolbar actions
+    m_actConnectGoogleDrive->setText(isConnected ? "Disconnect from Google Drive" : "Connect to Google Drive");
+    
+    // Show/hide sync actions based on connection state
+    m_actSyncNow->setVisible(isConnected);
+    m_actSyncSettings->setVisible(isConnected);
+    
+    // Enable/disable sync actions based on connection and sync state
+    bool shouldEnableSync = isConnected && !isSyncing;
+    m_actSyncNow->setEnabled(shouldEnableSync);
+    m_actSyncSettings->setEnabled(isConnected);
+    
+    qDebug() << "Sync Now button enabled:" << shouldEnableSync;
+    qDebug() << "Sync Now action enabled state:" << m_actSyncNow->isEnabled();
+    qDebug() << "Sync Now action visible state:" << m_actSyncNow->isVisible();
+    qDebug() << "Sync actions visible:" << isConnected;
+    
+    // Force toolbar update
+    m_toolbar->update();
+    
+    // Update status bar
+    QString status = m_syncManager->getSyncStatus();
+    statusBar()->showMessage(status);
+    
+    // Update sync status label
+    QLabel *syncStatusLabel = findChild<QLabel*>("syncStatusLabel");
+    if (syncStatusLabel) {
+        syncStatusLabel->setText("Sync: " + status);
+    }
+}
+
+void MainWindow::onSyncError(const QString &error)
+{
+    QMessageBox::warning(this, "Sync Error", "Google Drive sync failed:\n\n" + error);
+    onSyncStatusChanged();
 }
 
 

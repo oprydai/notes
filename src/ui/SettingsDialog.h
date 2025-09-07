@@ -20,6 +20,7 @@ public:
     QString getNotesDirectory() const;
     bool isAutoSaveEnabled() const;
     int getAutoSaveInterval() const;
+    bool isAutoImportEnabled() const;
 
 private slots:
     void browseNotesDirectory();
@@ -33,6 +34,7 @@ private:
     QPushButton *m_browseButton;
     QCheckBox *m_autoSaveCheckBox;
     QSpinBox *m_autoSaveIntervalSpinBox;
+    QCheckBox *m_autoImportCheckBox;
     QPushButton *m_okButton;
     QPushButton *m_cancelButton;
 };

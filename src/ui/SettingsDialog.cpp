@@ -84,6 +84,27 @@ void SettingsDialog::setupUi() {
     autoSaveLayout->addLayout(intervalLayout);
     autoSaveLayout->addWidget(autoSaveInfoLabel);
     
+    // Auto-import Group
+    auto *autoImportGroup = new QGroupBox("Auto-import Settings", this);
+    autoImportGroup->setStyleSheet("QGroupBox { font-weight: bold; border: 1px solid #404040; border-radius: 8px; margin-top: 10px; padding-top: 10px; } "
+                                  "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px 0 5px; }");
+    
+    auto *autoImportLayout = new QVBoxLayout(autoImportGroup);
+    
+    m_autoImportCheckBox = new QCheckBox("Enable auto-import of markdown files", autoImportGroup);
+    m_autoImportCheckBox->setStyleSheet("QCheckBox { color: #e0e0e0; spacing: 8px; } "
+                                       "QCheckBox::indicator { width: 18px; height: 18px; } "
+                                       "QCheckBox::indicator:unchecked { border: 2px solid #404040; border-radius: 3px; background: #2d2d2d; } "
+                                       "QCheckBox::indicator:checked { border: 2px solid #007aff; border-radius: 3px; background: #007aff; } "
+                                       "QCheckBox::indicator:checked::after { content: '✓'; color: white; font-weight: bold; }");
+    
+    auto *autoImportInfoLabel = new QLabel("When enabled, markdown files in the notes directory will be automatically imported on startup. Disable this to prevent unwanted 'Imported' folders from being created. You can still manually import files using the folder context menu.", autoImportGroup);
+    autoImportInfoLabel->setStyleSheet("color: #999999; font-size: 11px; margin-top: 5px;");
+    autoImportInfoLabel->setWordWrap(true);
+    
+    autoImportLayout->addWidget(m_autoImportCheckBox);
+    autoImportLayout->addWidget(autoImportInfoLabel);
+    
     // Buttons
     auto *buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch();
@@ -104,6 +125,7 @@ void SettingsDialog::setupUi() {
     // Add all to main layout
     layout->addWidget(notesGroup);
     layout->addWidget(autoSaveGroup);
+    layout->addWidget(autoImportGroup);
     layout->addStretch();
     layout->addLayout(buttonLayout);
     
@@ -121,6 +143,7 @@ void SettingsDialog::loadCurrentSettings() {
     m_notesDirectoryEdit->setText(db.getNotesDirectory());
     m_autoSaveCheckBox->setChecked(true); // Default to enabled
     m_autoSaveIntervalSpinBox->setValue(2); // Default to 2 seconds
+    m_autoImportCheckBox->setChecked(db.isAutoImportEnabled());
 }
 
 void SettingsDialog::browseNotesDirectory() {
@@ -159,4 +182,8 @@ bool SettingsDialog::isAutoSaveEnabled() const {
 
 int SettingsDialog::getAutoSaveInterval() const {
     return m_autoSaveIntervalSpinBox->value() * 1000; // Convert to milliseconds
+}
+
+bool SettingsDialog::isAutoImportEnabled() const {
+    return m_autoImportCheckBox->isChecked();
 }

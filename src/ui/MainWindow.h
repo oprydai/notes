@@ -5,7 +5,10 @@
 #include <QMap>
 #include <QStandardItemModel>
 #include <QTimer>
+#include <QMenu>
+#include <QAction>
 #include "NotesModel.h"
+#include "../sync/SyncManager.h"
 
 class QSplitter;
 class QTreeView;
@@ -36,6 +39,13 @@ private slots:
     void onAutoSaveTimeout();
     void showSettings();
     
+    // Google Drive Sync slots
+    void onGoogleDriveConnect();
+    void onSyncNow();
+    void onSyncSettings();
+    void onSyncStatusChanged();
+    void onSyncError(const QString &error);
+    
     // Event handling
     bool eventFilter(QObject *obj, QEvent *event) override;
     void showEvent(QShowEvent *event) override;
@@ -51,6 +61,9 @@ private:
     void setupContextMenus();
     void saveCurrentNote();
     void loadNoteContent(const QModelIndex &index);
+    
+    // Google Drive Sync setup
+    void setupGoogleDriveSync();
 
     void onFolderSelected(const QModelIndex &index);
     void createNoteInCurrentFolder();
@@ -59,6 +72,7 @@ private:
     void loadNotesFromDatabase(int folderId);
     void scheduleAutoSave();
     void importReadmeFiles();
+    void manualImportMarkdownFiles();
     
     // Drag and drop handling
     void moveNoteToFolder(int noteId, int targetFolderId);
@@ -78,6 +92,11 @@ private:
     QAction *m_actNewFolder;
     QAction *m_actDeleteFolder;
     QAction *m_actSettings;
+    
+    // Google Drive Sync actions
+    QAction *m_actConnectGoogleDrive;
+    QAction *m_actSyncNow;
+    QAction *m_actSyncSettings;
 
     
     // Note management
@@ -100,6 +119,9 @@ private:
     // Database models
     QStandardItemModel *m_folderModel;
     NotesModel *m_notesModel;
+    
+    // Google Drive Sync manager
+    SyncManager *m_syncManager;
 };
 
 

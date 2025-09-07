@@ -56,6 +56,12 @@ Thumbs.db
 # Log files
 *.log
 
+# Google Drive API credentials and configuration
+.env
+google_drive_config.ini
+google_drive_tokens.json
+sync_state.json
+
 # Debian packaging generated files
 debian/.debhelper/
 debian/files
@@ -63,3 +69,13 @@ debian/notes.debhelper.log
 debian/notes.substvars
 debian/debhelper-build-stamp
 debian/notes/
+
+
+.env
+config/google_drive_config.ini
+obj-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+

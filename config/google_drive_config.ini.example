@@ -1,0 +1,16 @@
+# Google Drive API Configuration Template
+# Copy this file to your app data directory and fill in your actual credentials
+# NEVER commit the actual config file to version control!
+
+# Your Google Cloud Project OAuth 2.0 credentials
+# Get these from: https://console.cloud.google.com/apis/credentials
+client_id=your_client_id_here
+client_secret=your_client_secret_here
+
+# OAuth 2.0 settings (usually don't need to change these)
+redirect_uri=urn:ietf:wg:oauth:2.0:oob
+scope=https://www.googleapis.com/auth/drive.file
+
+# Sync settings (optional)
+sync_interval=15
+sync_folder=Notes App

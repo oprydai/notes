@@ -15,7 +15,7 @@ endif()
 
 # Find Qt 6 or 5
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql Network)
 
 set(PROJECT_SOURCES
   src/main.cpp
@@ -34,6 +34,16 @@ set(PROJECT_SOURCES
   src/ui/SettingsDialog.cpp
   src/ui/NotesModel.h
   src/ui/NotesModel.cpp
+  src/sync/GoogleDriveManager.h
+  src/sync/GoogleDriveManager.cpp
+  src/sync/SyncManager.h
+  src/sync/SyncManager.cpp
+  src/sync/GoogleDriveConfig.h
+  src/sync/GoogleDriveConfig.cpp
+  src/sync/ConfigLoader.h
+  src/sync/ConfigLoader.cpp
+  src/ui/GoogleAuthDialog.h
+  src/ui/GoogleAuthDialog.cpp
   resources/resources.qrc
 )
 
@@ -57,6 +67,7 @@ target_link_libraries(${PROJECT_NAME}
   PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Sql
+    Qt${QT_VERSION_MAJOR}::Network
 )
 
 # On macOS and Windows, enable high-DPI scaling by default

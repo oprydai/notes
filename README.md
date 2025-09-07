@@ -300,12 +300,42 @@ src/
 - ✅ **Enhanced CSS**: Better visual states for drag and drop interactions
 - ✅ **Plain Text Editor**: Simple, distraction-free text editing experience
 
+## Google Drive Integration 🚀
+
+**NEW!** Your notes can now sync with Google Drive for cloud backup and cross-device access.
+
+### ✨ **Features**
+- 🔐 **Secure OAuth 2.0** authentication
+- ☁️ **Automatic sync** every 15 minutes (configurable)
+- 📱 **Cross-device access** to your notes
+- 🔄 **Conflict resolution** with smart merging
+- 📁 **Organized storage** in dedicated Google Drive folder
+
+### 🛡️ **Security First**
+- **No credentials in source code** - completely secure
+- **Multiple configuration options** - environment variables, config files, or system variables
+- **OAuth 2.0 flow** - never share your Google password
+- **Local token storage** - encrypted and secure
+
+### 🚀 **Quick Start**
+1. **Set up Google Cloud Project** (see [SECURE_SETUP.md](SECURE_SETUP.md))
+2. **Configure credentials** using one of the secure methods
+3. **Build and run** - sync menu will appear automatically
+4. **Connect to Google Drive** and start syncing!
+
+### 📚 **Documentation**
+- **[SECURE_SETUP.md](SECURE_SETUP.md)** - Complete setup guide
+- **[GOOGLE_DRIVE_SETUP.md](GOOGLE_DRIVE_SETUP.md)** - Google Cloud Console setup
+- **Example integration** in `src/sync/SyncIntegrationExample.cpp`
+
+---
+
 ## Future Enhancements
 - [ ] Tag system implementation
 - [ ] File attachments support
 - [ ] Note templates
 - [ ] Export to various formats (PDF, HTML)
-- [ ] Cloud sync integration
+- [x] **Cloud sync integration** ✅ (Google Drive)
 - [ ] Collaborative editing
 - [ ] Version history
 - [ ] Note encryption
