@@ -17,7 +17,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     // Italic *text* or _text_
     QTextCharFormat italic;
     italic.setFontItalic(true);
-    italic.setForeground(QColor(230, 230, 230));
+    italic.setForeground(QColor(200, 200, 255));
     m_rules.push_back({QRegExp("\\*([^*]+)\\*"), italic});
     m_rules.push_back({QRegExp("_([^_]+)_"), italic});
 
@@ -25,7 +25,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     QTextCharFormat boldItalic;
     boldItalic.setFontWeight(QFont::Bold);
     boldItalic.setFontItalic(true);
-    boldItalic.setForeground(QColor(255, 255, 255));
+    boldItalic.setForeground(QColor(255, 200, 200));
     m_rules.push_back({QRegExp("\\*\\*\\*([^*]+)\\*\\*\\*"), boldItalic});
     m_rules.push_back({QRegExp("___([^_]+)___"), boldItalic});
 
@@ -37,8 +37,8 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
 
     // Inline code `code`
     m_codeInline.setFontFamily("Consolas, Monaco, 'Courier New', monospace");
-    m_codeInline.setBackground(QColor(40, 40, 40));
-    m_codeInline.setForeground(QColor(220, 220, 220));
+    m_codeInline.setBackground(QColor(45, 45, 45));
+    m_codeInline.setForeground(QColor(255, 200, 100));
     m_codeInline.setFontWeight(QFont::Medium);
     m_rules.push_back({QRegExp("`([^`]+)`"), m_codeInline});
 
@@ -74,12 +74,12 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     m_heading1.setFontWeight(QFont::Bold);
     m_heading1.setFontPointSize(24);
     m_heading1.setForeground(QColor(255, 255, 255));
-    m_heading1.setBackground(QColor(30, 30, 30));
+    m_heading1.setBackground(QColor(35, 35, 35));
 
     m_heading2.setFontWeight(QFont::DemiBold);
     m_heading2.setFontPointSize(20);
     m_heading2.setForeground(QColor(240, 240, 240));
-    m_heading2.setBackground(QColor(25, 25, 25));
+    m_heading2.setBackground(QColor(30, 30, 30));
 }
 
 void MarkdownHighlighter::setActiveBlockNumber(int blockNumber) {

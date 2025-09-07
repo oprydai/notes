@@ -3,10 +3,13 @@
 /* Global Styles */
 * {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.01em;
 }
 
 QMainWindow { 
-    background: #1a1a1a; 
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 #1a1a1a, stop:1 #0f0f0f); 
     color: #ffffff;
 }
 
@@ -44,36 +47,88 @@ QMainWindow::title-bar-button:pressed {
 
 /* Toolbar Styling */
 QToolBar {
-    background: linear-gradient(to bottom, #2d2d2d, #252525);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 #2d2d2d, stop:1 #252525);
     border: none;
     border-bottom: 1px solid #404040;
-    padding: 8px 12px;
-    spacing: 8px;
-    min-height: 24px;
+    padding: 12px 20px;
+    spacing: 16px;
+    min-height: 36px;
 }
 
 QToolBar QToolButton {
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 6px;
-    padding: 6px 12px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(255, 255, 255, 0.05), 
+                               stop:1 rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 18px;
     color: #e0e0e0;
     font-weight: 500;
-    min-height: 20px;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    min-height: 28px;
 }
 
 QToolBar QToolButton:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(255, 255, 255, 0.15), 
+                               stop:1 rgba(255, 255, 255, 0.08));
+    border-color: rgba(0, 122, 255, 0.3);
+    color: #ffffff;
 }
 
 QToolBar QToolButton:pressed {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(0, 122, 255, 0.2), 
+                               stop:1 rgba(0, 122, 255, 0.1));
+    border-color: rgba(0, 122, 255, 0.5);
+    color: #ffffff;
 }
 
 QToolBar QToolButton:disabled {
     color: #666666;
+}
+
+/* Toolbar Separators */
+QToolBar::separator {
+    background: #404040;
+    width: 1px;
+    margin: 8px 4px;
+    border-radius: 1px;
+}
+
+/* Primary Action Styling */
+QToolBar QToolButton[priority="1"] {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(0, 122, 255, 0.1), 
+                               stop:1 rgba(0, 122, 255, 0.05));
+    border: 1px solid rgba(0, 122, 255, 0.2);
+    font-weight: 600;
+}
+
+QToolBar QToolButton[priority="1"]:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(0, 122, 255, 0.2), 
+                               stop:1 rgba(0, 122, 255, 0.1));
+    border: 1px solid rgba(0, 122, 255, 0.4);
+}
+
+/* Utility Action Styling */
+QToolBar QToolButton[priority="3"] {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(142, 142, 147, 0.05), 
+                               stop:1 rgba(142, 142, 147, 0.02));
+    border: 1px solid rgba(142, 142, 147, 0.1);
+    color: #b0b0b0;
+}
+
+QToolBar QToolButton[priority="3"]:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(142, 142, 147, 0.1), 
+                               stop:1 rgba(142, 142, 147, 0.05));
+    border: 1px solid rgba(142, 142, 147, 0.2);
+    color: #e0e0e0;
 }
 
 QToolBar QLineEdit {
@@ -112,11 +167,14 @@ QSplitter::handle:pressed {
 
 /* Tree View Styling */
 QTreeView {
-    background: #1f1f1f;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 #1f1f1f, stop:1 #1a1a1a);
     border: none;
     outline: none;
     color: #e0e0e0;
     font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
     padding: 8px 0px;
     selection-background-color: transparent;
     show-decoration-selected: 0;
@@ -130,12 +188,18 @@ QTreeView::item {
 }
 
 QTreeView::item:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(255, 255, 255, 0.12), 
+                               stop:1 rgba(255, 255, 255, 0.06));
+    border-radius: 8px;
 }
 
 QTreeView::item:selected {
-    background: rgba(0, 122, 255, 0.2);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(0, 122, 255, 0.25), 
+                               stop:1 rgba(0, 122, 255, 0.15));
     color: #ffffff;
+    border-radius: 8px;
 }
 
 QTreeView::item:selected:active {
@@ -164,11 +228,14 @@ QTreeView::branch:open:has-children:has-siblings {
 
 /* List View Styling */
 QListView {
-    background: #1f1f1f;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 #1f1f1f, stop:1 #1a1a1a);
     border: none;
     outline: none;
     color: #e0e0e0;
     font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
     padding: 8px 4px;
     selection-background-color: transparent;
     show-decoration-selected: 0;
@@ -182,23 +249,32 @@ QListView::item {
 }
 
 QListView::item:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(255, 255, 255, 0.12), 
+                               stop:1 rgba(255, 255, 255, 0.06));
+    border-radius: 10px;
 }
 
 QListView::item:selected {
-    background: rgba(0, 122, 255, 0.2);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(0, 122, 255, 0.25), 
+                               stop:1 rgba(0, 122, 255, 0.15));
     color: #ffffff;
+    border-radius: 10px;
 }
 
 /* Text Editor Styling */
 QTextEdit, QPlainTextEdit {
-    background: #1a1a1a;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 #1a1a1a, stop:1 #0f0f0f);
     border: none;
     outline: none;
     color: #e0e0e0;
     font-size: 14px;
-    line-height: 1.5;
-    padding: 16px 20px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1.6;
+    padding: 20px 24px;
     selection-background-color: rgba(0, 122, 255, 0.3);
     selection-color: #ffffff;
 }
@@ -375,7 +451,8 @@ QMessageBox QPushButton:pressed {
 
 /* Custom Note List Styling */
 #NotesList {
-    background: #1f1f1f;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 #1f1f1f, stop:1 #1a1a1a);
     border: none;
     outline: none;
     padding: 8px 4px;
@@ -383,17 +460,23 @@ QMessageBox QPushButton:pressed {
 
 #NotesList::item {
     padding: 12px 16px;
-    border-radius: 10px;
-    margin: 3px 6px;
-    min-height: 28px;
+    border-radius: 12px;
+    margin: 4px 8px;
+    min-height: 32px;
 }
 
 #NotesList::item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(255, 255, 255, 0.15), 
+                               stop:1 rgba(255, 255, 255, 0.08));
+    border-radius: 12px;
 }
 
 #NotesList::item:selected {
-    background: rgba(0, 122, 255, 0.25);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                               stop:0 rgba(0, 122, 255, 0.3), 
+                               stop:1 rgba(0, 122, 255, 0.2));
+    border-radius: 12px;
 }
 
 /* Focus indicators */

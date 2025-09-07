@@ -97,8 +97,12 @@ MainWindow::MainWindow(QWidget *parent)
       m_notesModel(new NotesModel(this)),
       m_syncManager(nullptr) {
     setWindowTitle("Notes - Orchard");
-    setMinimumSize(1200, 800);  // Increased minimum size for all toolbar buttons
-    resize(1400, 900);  // Set default window size
+    setMinimumSize(1200, 700);  // More reasonable minimum size
+    resize(2000, 900);  // Increased default window width
+    
+    // Enable high DPI scaling (these are application attributes, not widget attributes)
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
+    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
     
     // Set WM_CLASS for proper desktop integration
     setObjectName("Notes");
@@ -148,53 +152,54 @@ void MainWindow::setupUi() {
     m_toolbar->setMinimumHeight(40);  // Ensure toolbar has enough height
     addToolBar(Qt::TopToolBarArea, m_toolbar);
     
-    // Folder actions (leftmost)
-    m_actNewFolder = m_toolbar->addAction(createIcon("📁"), "New Folder", this, &MainWindow::createNewFolder);
-    m_actNewFolder->setToolTip("Create a new folder");
-    
-    m_actDeleteFolder = m_toolbar->addAction(createIcon("🗑"), "Delete Folder", this, &MainWindow::deleteSelectedFolder);
-    m_actDeleteFolder->setToolTip("Delete selected folder");
-    
-    m_toolbar->addSeparator();
-    
-    // Note actions with modern icons
-    m_actNewNote = m_toolbar->addAction(createIcon("+"), "New Note", this, &MainWindow::createNewNote);
+    // === PRIMARY ACTIONS (Most frequently used) ===
+    // Note creation (primary action)
+    m_actNewNote = m_toolbar->addAction(createIcon("+", QColor(0, 122, 255)), "New Note", this, &MainWindow::createNewNote);
     m_actNewNote->setShortcut(QKeySequence::New);
     m_actNewNote->setToolTip("Create a new note (Ctrl+N)");
+    m_actNewNote->setPriority(QAction::HighPriority);
     
-    m_actDeleteNote = m_toolbar->addAction(createIcon("🗑"), "Delete", this, &MainWindow::deleteSelectedNote);
-    m_actDeleteNote->setShortcut(QKeySequence::Delete);
-    m_actDeleteNote->setToolTip("Delete selected note (Del)");
-    
-
-    
-    m_toolbar->addSeparator();
-    
-    // Settings action
-    m_actSettings = m_toolbar->addAction(createIcon("⚙"), "Settings", this, &MainWindow::showSettings);
-    m_actSettings->setToolTip("Open settings");
+    // Folder creation (secondary primary action)
+    m_actNewFolder = m_toolbar->addAction(createIcon("📁", QColor(52, 199, 89)), "New Folder", this, &MainWindow::createNewFolder);
+    m_actNewFolder->setToolTip("Create a new folder");
+    m_actNewFolder->setPriority(QAction::HighPriority);
     
     m_toolbar->addSeparator();
     
-    // Google Drive Sync actions
-    m_actConnectGoogleDrive = m_toolbar->addAction(createIcon("☁"), "Connect to Google Drive", this, &MainWindow::onGoogleDriveConnect);
+    // === CONTEXT ACTIONS ===
+    // Smart delete (context-sensitive)
+    m_actSmartDelete = m_toolbar->addAction(createIcon("🗑", QColor(255, 69, 58)), "Delete", this, &MainWindow::smartDelete);
+    m_actSmartDelete->setShortcut(QKeySequence::Delete);
+    m_actSmartDelete->setToolTip("Delete selected item (Del)");
+    m_actSmartDelete->setPriority(QAction::NormalPriority);
+    
+    m_toolbar->addSeparator();
+    
+    // === SYNC ACTIONS (Grouped together) ===
+    // Google Drive connection (primary sync action)
+    m_actConnectGoogleDrive = m_toolbar->addAction(createIcon("☁", QColor(52, 199, 89)), "Google Drive", this, &MainWindow::onGoogleDriveConnect);
     m_actConnectGoogleDrive->setToolTip("Connect to Google Drive for cloud sync");
+    m_actConnectGoogleDrive->setPriority(QAction::NormalPriority);
     
-    m_actSyncNow = m_toolbar->addAction(createIcon("🔄"), "Sync Now", this, &MainWindow::onSyncNow);
+    // Sync now (secondary sync action)
+    m_actSyncNow = m_toolbar->addAction(createIcon("🔄", QColor(0, 122, 255)), "Sync", this, &MainWindow::onSyncNow);
     m_actSyncNow->setToolTip("Sync notes with Google Drive now");
     m_actSyncNow->setEnabled(false);
     m_actSyncNow->setVisible(false);  // Initially hidden
+    m_actSyncNow->setPriority(QAction::LowPriority);
     
-    m_actSyncSettings = m_toolbar->addAction(createIcon("⚙"), "Sync Settings", this, &MainWindow::onSyncSettings);
-    m_actSyncSettings->setToolTip("Configure Google Drive sync settings");
-    m_actSyncSettings->setEnabled(false);
-    m_actSyncSettings->setVisible(false);  // Initially hidden
+    m_toolbar->addSeparator();
+    
+    // === UTILITY ACTIONS (Right-aligned) ===
+    // Settings (utility action)
+    m_actSettings = m_toolbar->addAction(createIcon("⚙", QColor(142, 142, 147)), "Settings", this, &MainWindow::showSettings);
+    m_actSettings->setToolTip("Open application settings");
+    m_actSettings->setPriority(QAction::LowPriority);
     
     // Debug: Check if actions were created
     qDebug() << "Sync actions created:";
     qDebug() << "  Connect action:" << (m_actConnectGoogleDrive ? "YES" : "NO");
     qDebug() << "  Sync Now action:" << (m_actSyncNow ? "YES" : "NO");
-    qDebug() << "  Sync Settings action:" << (m_actSyncSettings ? "YES" : "NO");
     qDebug() << "  Toolbar actions count:" << m_toolbar->actions().count();
     
     // Debug: Check action properties
@@ -206,12 +211,7 @@ void MainWindow::setupUi() {
     
     m_toolbar->addSeparator();
     
-    // View toggle button (for future preview mode)
-    auto *viewToggle = new QToolButton(m_toolbar);
-    viewToggle->setText("👁");
-    viewToggle->setToolTip("Toggle preview mode");
-    viewToggle->setCheckable(true);
-    m_toolbar->addWidget(viewToggle);
+    // Removed theme toggle button - dark theme only
     
     // Debug: List all toolbar actions
     qDebug() << "All toolbar actions:";
@@ -223,7 +223,6 @@ void MainWindow::setupUi() {
     qDebug() << "Sync actions in toolbar:";
     qDebug() << "  Connect action in toolbar:" << m_toolbar->actions().contains(m_actConnectGoogleDrive);
     qDebug() << "  Sync Now action in toolbar:" << m_toolbar->actions().contains(m_actSyncNow);
-    qDebug() << "  Sync Settings action in toolbar:" << m_toolbar->actions().contains(m_actSyncSettings);
 
     m_mainSplitter = new QSplitter(Qt::Horizontal, this);
     setCentralWidget(m_mainSplitter);
@@ -311,10 +310,15 @@ void MainWindow::setupUi() {
     m_mainSplitter->setStretchFactor(2, 1);
     m_mainSplitter->setChildrenCollapsible(false);
 
-    // Better default sizes
+    // Better default sizes with responsive behavior for wider window
     QList<int> sizes;
-    sizes << 220 << 300 << 600;
+    sizes << 300 << 400 << 1300;  // More space for all panels with wider window
     m_mainSplitter->setSizes(sizes);
+    
+    // Set minimum sizes for better responsive behavior
+    m_mainSplitter->widget(0)->setMinimumWidth(200);  // Folders
+    m_mainSplitter->widget(1)->setMinimumWidth(250);  // Notes list
+    m_mainSplitter->widget(2)->setMinimumWidth(500);  // Editor
 
     // Enhanced status bar
     auto *statusBar = this->statusBar();
@@ -373,6 +377,13 @@ void MainWindow::setupUi() {
     
     // Connect folder selection to update notes
     connect(m_folderTree->selectionModel(), &QItemSelectionModel::currentChanged, this, &MainWindow::onFolderSelected);
+    
+    // Connect selection changes to update delete button text
+    connect(m_folderTree->selectionModel(), &QItemSelectionModel::currentChanged, this, &MainWindow::updateDeleteButtonText);
+    connect(m_noteList->selectionModel(), &QItemSelectionModel::currentChanged, this, &MainWindow::updateDeleteButtonText);
+    
+    // Add keyboard shortcuts
+    setupKeyboardShortcuts();
     
     // Enable drop event handling for folder tree
     m_folderTree->viewport()->installEventFilter(this);
@@ -462,6 +473,7 @@ void MainWindow::setupContextMenus() {
         
         QAction *deleteAction = menu.addAction("🗑️ Delete Folder");
         deleteAction->setShortcut(QKeySequence::Delete);
+        deleteAction->setIcon(createIcon("🗑", QColor(255, 69, 58)));
         
         menu.addSeparator();
         
@@ -517,6 +529,7 @@ void MainWindow::setupContextMenus() {
         
         QAction *deleteAction = menu.addAction("🗑️ Delete Note");
         deleteAction->setShortcut(QKeySequence::Delete);
+        deleteAction->setIcon(createIcon("🗑", QColor(255, 69, 58)));
         
         // Enable/disable actions based on selection
         QModelIndex index = m_noteList->indexAt(pos);
@@ -682,7 +695,7 @@ void MainWindow::setupStyle() {
     
     QApplication::setPalette(palette);
 
-    // Stylesheet
+    // Stylesheet - dark theme only
     const QString qss = readResourceText(":/styles/app.qss");
     if (!qss.isEmpty()) {
         if (qApp) qApp->setStyleSheet(qss);
@@ -690,6 +703,22 @@ void MainWindow::setupStyle() {
 }
 
 void MainWindow::createNewNote() {
+    // If no folder is selected, select the first available folder
+    if (m_currentFolderId <= 0) {
+        if (m_folderModel->rowCount() > 0) {
+            QModelIndex firstFolder = m_folderModel->index(0, 0);
+            onFolderSelected(firstFolder);
+            m_folderTree->setCurrentIndex(firstFolder);
+        } else {
+            // No folders exist, create a default folder first
+            createNewFolder();
+            if (m_folderModel->rowCount() > 0) {
+                QModelIndex firstFolder = m_folderModel->index(0, 0);
+                onFolderSelected(firstFolder);
+                m_folderTree->setCurrentIndex(firstFolder);
+            }
+        }
+    }
     createNoteInCurrentFolder();
 }
 
@@ -750,6 +779,15 @@ void MainWindow::createNewFolder() {
         int folderId = db.createFolder(folderName);
         if (folderId > 0) {
             loadFoldersFromDatabase();
+            // Auto-select the newly created folder
+            for (int i = 0; i < m_folderModel->rowCount(); ++i) {
+                QModelIndex index = m_folderModel->index(i, 0);
+                if (index.data(Qt::UserRole).toInt() == folderId) {
+                    m_folderTree->setCurrentIndex(index);
+                    onFolderSelected(index);
+                    break;
+                }
+            }
         }
     }
 }
@@ -771,6 +809,47 @@ void MainWindow::deleteSelectedFolder() {
             loadFoldersFromDatabase();
         }
     }
+}
+
+void MainWindow::smartDelete() {
+    // Check if a note is selected in the note list
+    QModelIndex noteIndex = m_noteList->currentIndex();
+    if (noteIndex.isValid()) {
+        deleteSelectedNote();
+        return;
+    }
+    
+    // Check if a folder is selected in the folder tree
+    QModelIndex folderIndex = m_folderTree->currentIndex();
+    if (folderIndex.isValid()) {
+        deleteSelectedFolder();
+        return;
+    }
+    
+    // If nothing is selected, show a helpful message
+    statusBar()->showMessage("Select a note or folder to delete", 3000);
+}
+
+void MainWindow::updateDeleteButtonText() {
+    // Check if a note is selected
+    QModelIndex noteIndex = m_noteList->currentIndex();
+    if (noteIndex.isValid()) {
+        m_actSmartDelete->setText("Delete Note");
+        m_actSmartDelete->setToolTip("Delete selected note (Del)");
+        return;
+    }
+    
+    // Check if a folder is selected
+    QModelIndex folderIndex = m_folderTree->currentIndex();
+    if (folderIndex.isValid()) {
+        m_actSmartDelete->setText("Delete");
+        m_actSmartDelete->setToolTip("Delete selected folder (Del)");
+        return;
+    }
+    
+    // Default state
+    m_actSmartDelete->setText("Delete");
+    m_actSmartDelete->setToolTip("Delete selected item (Del)");
 }
 
 
@@ -1194,17 +1273,22 @@ void MainWindow::onSyncStatusChanged()
     
     qDebug() << "MainWindow::onSyncStatusChanged - isConnected:" << isConnected << "isSyncing:" << isSyncing;
     
-    // Update toolbar actions
-    m_actConnectGoogleDrive->setText(isConnected ? "Disconnect from Google Drive" : "Connect to Google Drive");
+    // Update toolbar actions with smart text
+    m_actConnectGoogleDrive->setText(isConnected ? "Disconnect" : "Google Drive");
+    m_actConnectGoogleDrive->setToolTip(isConnected ? "Disconnect from Google Drive" : "Connect to Google Drive for cloud sync");
     
     // Show/hide sync actions based on connection state
     m_actSyncNow->setVisible(isConnected);
-    m_actSyncSettings->setVisible(isConnected);
+    
+    // Update sync button text based on state
+    if (isConnected) {
+        m_actSyncNow->setText(isSyncing ? "Syncing..." : "Sync");
+        m_actSyncNow->setToolTip(isSyncing ? "Synchronizing with Google Drive..." : "Sync notes with Google Drive now");
+    }
     
     // Enable/disable sync actions based on connection and sync state
     bool shouldEnableSync = isConnected && !isSyncing;
     m_actSyncNow->setEnabled(shouldEnableSync);
-    m_actSyncSettings->setEnabled(isConnected);
     
     qDebug() << "Sync Now button enabled:" << shouldEnableSync;
     qDebug() << "Sync Now action enabled state:" << m_actSyncNow->isEnabled();
@@ -1230,5 +1314,49 @@ void MainWindow::onSyncError(const QString &error)
     QMessageBox::warning(this, "Sync Error", "Google Drive sync failed:\n\n" + error);
     onSyncStatusChanged();
 }
+
+// Removed search functionality
+
+void MainWindow::setupKeyboardShortcuts()
+{
+    // Removed search-related shortcuts
+    
+    // Navigation shortcuts
+    auto *nextNoteShortcut = new QShortcut(QKeySequence("Ctrl+Down"), this);
+    connect(nextNoteShortcut, &QShortcut::activated, this, [this]() {
+        if (m_noteList->model() && m_noteList->model()->rowCount() > 0) {
+            QModelIndex current = m_noteList->currentIndex();
+            int nextRow = current.isValid() ? current.row() + 1 : 0;
+            if (nextRow < m_noteList->model()->rowCount()) {
+                m_noteList->setCurrentIndex(m_noteList->model()->index(nextRow, 0));
+            }
+        }
+    });
+    
+    auto *prevNoteShortcut = new QShortcut(QKeySequence("Ctrl+Up"), this);
+    connect(prevNoteShortcut, &QShortcut::activated, this, [this]() {
+        if (m_noteList->model() && m_noteList->model()->rowCount() > 0) {
+            QModelIndex current = m_noteList->currentIndex();
+            int prevRow = current.isValid() ? current.row() - 1 : 0;
+            if (prevRow >= 0) {
+                m_noteList->setCurrentIndex(m_noteList->model()->index(prevRow, 0));
+            }
+        }
+    });
+    
+    // Save shortcut
+    auto *saveShortcut = new QShortcut(QKeySequence("Ctrl+S"), this);
+    connect(saveShortcut, &QShortcut::activated, this, [this]() {
+        saveCurrentNote();
+    });
+    
+    // Smart delete shortcut
+    auto *deleteShortcut = new QShortcut(QKeySequence::Delete, this);
+    connect(deleteShortcut, &QShortcut::activated, this, &MainWindow::smartDelete);
+    
+    // Removed theme toggle shortcut - dark theme only
+}
+
+// Removed toggleTheme method - dark theme only
 
 

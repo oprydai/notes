@@ -57,8 +57,11 @@ private:
     void deleteSelectedNote();
     void createNewFolder();
     void deleteSelectedFolder();
-
+    void smartDelete();
+    void updateDeleteButtonText();
+    
     void setupContextMenus();
+    void setupKeyboardShortcuts();
     void saveCurrentNote();
     void loadNoteContent(const QModelIndex &index);
     
@@ -87,16 +90,14 @@ private:
 
     QToolBar *m_toolbar;
     QAction *m_actNewNote;
-    QAction *m_actDeleteNote;
+    QAction *m_actSmartDelete;
 
     QAction *m_actNewFolder;
-    QAction *m_actDeleteFolder;
     QAction *m_actSettings;
     
     // Google Drive Sync actions
     QAction *m_actConnectGoogleDrive;
     QAction *m_actSyncNow;
-    QAction *m_actSyncSettings;
 
     
     // Note management
