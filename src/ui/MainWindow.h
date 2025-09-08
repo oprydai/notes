@@ -38,6 +38,8 @@ private slots:
     void onTextChanged();
     void onAutoSaveTimeout();
     void showSettings();
+    void onDatabaseError(const QString &errorMessage);
+    void onOperationFailed(const QString &operation, const QString &errorMessage);
     
     // Google Drive Sync slots
     void onGoogleDriveConnect();

@@ -106,6 +106,8 @@ signals:
     void folderSaved(int folderId);
     void folderDeleted(int folderId);
     void autoSaveTriggered();
+    void databaseError(const QString &errorMessage);
+    void operationFailed(const QString &operation, const QString &errorMessage);
 
 private slots:
     void performAutoSave();

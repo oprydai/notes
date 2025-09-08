@@ -908,6 +908,8 @@ void MainWindow::setupDatabaseConnections() {
     connect(&db, &DatabaseManager::folderSaved, this, &MainWindow::onFolderSaved);
     connect(&db, &DatabaseManager::folderDeleted, this, &MainWindow::onFolderDeleted);
     connect(&db, &DatabaseManager::autoSaveTriggered, this, &MainWindow::onAutoSaveTriggered);
+    connect(&db, &DatabaseManager::databaseError, this, &MainWindow::onDatabaseError);
+    connect(&db, &DatabaseManager::operationFailed, this, &MainWindow::onOperationFailed);
     
     // Setup auto-save timer
     connect(m_autoSaveTimer, &QTimer::timeout, this, &MainWindow::onAutoSaveTimeout);
@@ -1202,8 +1204,13 @@ void MainWindow::setupGoogleDriveSync()
 {
     // Ensure ConfigLoader is loaded first
     if (!ConfigLoader::instance().loadConfig()) {
-        qWarning() << "Failed to load Google Drive configuration";
-        qWarning() << "Errors:" << ConfigLoader::instance().getValidationErrors();
+        // Google Drive configuration is missing - this is normal for first-time users
+        // Don't show error messages, just log for debugging
+        qDebug() << "Google Drive configuration not found - sync features will be disabled";
+        qDebug() << "Configuration errors:" << ConfigLoader::instance().getValidationErrors();
+        
+        // Show a helpful message in the status bar instead of an error
+        statusBar()->showMessage("Google Drive sync not configured - use Settings to set up sync", 5000);
     }
     
     // Initialize the sync manager using the singleton DatabaseManager
@@ -1224,6 +1231,18 @@ void MainWindow::setupGoogleDriveSync()
 
 void MainWindow::onGoogleDriveConnect()
 {
+    // Check if Google Drive configuration is available
+    if (!ConfigLoader::instance().isValid()) {
+        QMessageBox::information(this, "Google Drive Sync", 
+            "Google Drive sync is not configured.\n\n"
+            "To enable Google Drive sync, you need to:\n"
+            "1. Set up a Google Cloud project\n"
+            "2. Configure OAuth credentials\n"
+            "3. Add the configuration file\n\n"
+            "Please refer to the documentation for setup instructions.");
+        return;
+    }
+    
     if (m_syncManager && m_syncManager->isAuthenticated()) {
         // Already connected - show disconnect option
         QMessageBox::StandardButton reply = QMessageBox::question(
@@ -1313,6 +1332,16 @@ void MainWindow::onSyncError(const QString &error)
 {
     QMessageBox::warning(this, "Sync Error", "Google Drive sync failed:\n\n" + error);
     onSyncStatusChanged();
+}
+
+void MainWindow::onDatabaseError(const QString &errorMessage)
+{
+    QMessageBox::critical(this, "Database Error", errorMessage);
+}
+
+void MainWindow::onOperationFailed(const QString &operation, const QString &errorMessage)
+{
+    QMessageBox::warning(this, QString("%1 Failed").arg(operation), errorMessage);
 }
 
 // Removed search functionality

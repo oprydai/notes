@@ -44,6 +44,8 @@ set(PROJECT_SOURCES
   src/sync/ConfigLoader.cpp
   src/ui/GoogleAuthDialog.h
   src/ui/GoogleAuthDialog.cpp
+  src/utils/Logger.h
+  src/utils/Logger.cpp
   resources/resources.qrc
 )
 
@@ -78,5 +80,35 @@ endif()
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
   qt_finalize_executable(${PROJECT_NAME})
 endif()
+
+# Install the executable
+install(TARGETS ${PROJECT_NAME}
+  BUNDLE DESTINATION .
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# Install config file to a location where the app can find it
+# The app looks for config files in multiple locations, including relative to the executable
+install(FILES config/google_drive_config.ini.example
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}
+  RENAME google_drive_config.ini
+)
+
+# Install documentation
+install(FILES README.md
+  DESTINATION ${CMAKE_INSTALL_DOCDIR}/${PROJECT_NAME}
+)
+
+# Install desktop file and icons
+install(FILES debian/notes.desktop
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+)
+
+# Install icons
+install(DIRECTORY debian/icons/
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor
+  FILES_MATCHING PATTERN "*.png" PATTERN "*.svg"
+)
 
 

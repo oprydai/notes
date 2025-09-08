@@ -18,6 +18,63 @@
 #include <QDebug>
 #include <QCryptographicHash>
 
+// Helper function to convert technical error messages to user-friendly ones
+static QString makeUserFriendlyError(const QString& technicalError) {
+    if (technicalError.contains("No refresh token available")) {
+        return "Google Drive connection has expired. Please reconnect to Google Drive.";
+    }
+    if (technicalError.contains("Not authenticated")) {
+        return "Please connect to Google Drive first to sync your notes.";
+    }
+    if (technicalError.contains("No sync folder set")) {
+        return "Google Drive sync folder is not configured. Please check your sync settings.";
+    }
+    if (technicalError.contains("Note content is empty")) {
+        return "Cannot sync empty notes. Please add some content to your note first.";
+    }
+    if (technicalError.contains("Note content is only whitespace")) {
+        return "Cannot sync notes with only spaces. Please add some content to your note first.";
+    }
+    if (technicalError.contains("No access token available")) {
+        return "Google Drive authentication has expired. Please reconnect to Google Drive.";
+    }
+    if (technicalError.contains("Access token expired")) {
+        return "Google Drive connection has expired. Please reconnect to Google Drive.";
+    }
+    if (technicalError.contains("Authentication failed")) {
+        return "Failed to connect to Google Drive. Please check your internet connection and try again.";
+    }
+    if (technicalError.contains("Token refresh failed")) {
+        return "Google Drive connection has expired. Please reconnect to Google Drive.";
+    }
+    if (technicalError.contains("Failed to list notes")) {
+        return "Unable to retrieve notes from Google Drive. Please check your connection and try again.";
+    }
+    if (technicalError.contains("Failed to create folder")) {
+        return "Unable to create folder in Google Drive. Please check your permissions and try again.";
+    }
+    if (technicalError.contains("Failed to create subfolder")) {
+        return "Unable to create subfolder in Google Drive. Please check your permissions and try again.";
+    }
+    if (technicalError.contains("Failed to search for folder")) {
+        return "Unable to find folder in Google Drive. Please check your sync settings.";
+    }
+    if (technicalError.contains("Failed to list subfolders")) {
+        return "Unable to retrieve folders from Google Drive. Please check your connection and try again.";
+    }
+    if (technicalError.contains("Failed to list notes in folder")) {
+        return "Unable to retrieve notes from Google Drive folder. Please check your connection and try again.";
+    }
+    
+    // For network errors, provide a generic user-friendly message
+    if (technicalError.contains("errorString") || technicalError.contains("network")) {
+        return "Unable to connect to Google Drive. Please check your internet connection and try again.";
+    }
+    
+    // For other technical errors, provide a generic message
+    return "A sync error occurred. Please try again or reconnect to Google Drive.";
+}
+
 // Constants
 const QString GoogleDriveManager::API_BASE_URL = "https://www.googleapis.com/drive/v3";
 const QString GoogleDriveManager::AUTH_BASE_URL = "https://accounts.google.com/oauth/authorize";
@@ -163,7 +220,7 @@ void GoogleDriveManager::requestAccessToken(const QString &authCode)
 void GoogleDriveManager::refreshToken()
 {
     if (m_refreshToken.isEmpty()) {
-        emit error("No refresh token available");
+        emit error(makeUserFriendlyError("No refresh token available"));
         return;
     }
     
@@ -220,12 +277,12 @@ void GoogleDriveManager::forceReauthenticate()
 void GoogleDriveManager::uploadNote(const QString &noteId, const QString &content, const QString &title)
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
     if (m_syncFolderId.isEmpty()) {
-        emit error("No sync folder set for upload");
+        emit error(makeUserFriendlyError("No sync folder set for upload"));
         return;
     }
     
@@ -237,13 +294,13 @@ void GoogleDriveManager::uploadNote(const QString &noteId, const QString &conten
     // Validate content before proceeding
     if (content.isEmpty()) {
         qDebug() << "ERROR: Content is empty, cannot upload note!";
-        emit error("Note content is empty");
+        emit error(makeUserFriendlyError("Note content is empty"));
         return;
     }
     
     if (content.trimmed().isEmpty()) {
         qDebug() << "ERROR: Content is only whitespace, cannot upload note!";
-        emit error("Note content is only whitespace");
+        emit error(makeUserFriendlyError("Note content is only whitespace"));
         return;
     }
     
@@ -303,7 +360,7 @@ void GoogleDriveManager::uploadNote(const QString &noteId, const QString &conten
 void GoogleDriveManager::uploadNoteToFolder(const QString &noteId, const QString &content, const QString &title, const QString &folderId)
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -320,13 +377,13 @@ void GoogleDriveManager::uploadNoteToFolder(const QString &noteId, const QString
     // Validate content before proceeding
     if (content.isEmpty()) {
         qDebug() << "ERROR: Content is empty, cannot upload note!";
-        emit error("Note content is empty");
+        emit error(makeUserFriendlyError("Note content is empty"));
         return;
     }
     
     if (content.trimmed().isEmpty()) {
         qDebug() << "ERROR: Content is only whitespace, cannot upload note!";
-        emit error("Note content is only whitespace");
+        emit error(makeUserFriendlyError("Note content is only whitespace"));
         return;
     }
     
@@ -377,7 +434,7 @@ void GoogleDriveManager::uploadNoteToFolder(const QString &noteId, const QString
 void GoogleDriveManager::downloadNote(const QString &noteId)
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -392,7 +449,7 @@ void GoogleDriveManager::downloadNote(const QString &noteId)
 void GoogleDriveManager::deleteNote(const QString &noteId)
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -407,7 +464,7 @@ void GoogleDriveManager::deleteNote(const QString &noteId)
 void GoogleDriveManager::listNotes()
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -442,7 +499,7 @@ void GoogleDriveManager::createNote(const QString &title, const QString &content
 void GoogleDriveManager::createFolder(const QString &folderName)
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -481,7 +538,7 @@ void GoogleDriveManager::createFolder(const QString &folderName)
 void GoogleDriveManager::syncAll()
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -499,7 +556,7 @@ void GoogleDriveManager::syncAll()
 void GoogleDriveManager::smartSync()
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -526,7 +583,7 @@ void GoogleDriveManager::uploadAllNotes(const QList<QPair<QString, QString>> &no
     qDebug() << "Sync folder ID:" << m_syncFolderId;
     
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -554,7 +611,7 @@ void GoogleDriveManager::uploadAllNotes(const QList<QPair<QString, QString>> &no
 void GoogleDriveManager::uploadFolderStructure(const QList<QPair<QString, QList<QPair<QString, QString>>>> &folderStructure)
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -685,7 +742,7 @@ void GoogleDriveManager::startNoteUploads()
 void GoogleDriveManager::listSubfolders()
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -709,7 +766,7 @@ void GoogleDriveManager::listSubfolders()
 void GoogleDriveManager::listNotesInFolder(const QString &folderId, const QString &folderName)
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -770,7 +827,7 @@ void GoogleDriveManager::addAuthHeader(QNetworkRequest &request)
         qDebug() << "Auth header set:" << authHeader.mid(0, 30) + "...";
     } else {
         qDebug() << "ERROR: No access token available!";
-        emit error("No access token available. Please authenticate with Google Drive first.");
+        emit error(makeUserFriendlyError("No access token available. Please authenticate with Google Drive first."));
     }
 }
 
@@ -824,7 +881,7 @@ void GoogleDriveManager::refreshTokenIfNeeded()
             qDebug() << "No refresh token available, need to re-authenticate";
             m_isAuthenticated = false;
             emit authenticationChanged(false);
-            emit error("Access token expired and no refresh token available. Please re-authenticate.");
+            emit error(makeUserFriendlyError("Access token expired and no refresh token available. Please re-authenticate."));
         }
     }
 }
@@ -884,7 +941,7 @@ void GoogleDriveManager::handleAuthResponse(QNetworkReply *reply)
         // Get or create app data folder
         // TODO: Implement folder creation logic
     } else {
-        emit error("Authentication failed: " + reply->errorString());
+        emit error(makeUserFriendlyError("Authentication failed: " + reply->errorString()));
     }
 }
 
@@ -901,7 +958,7 @@ void GoogleDriveManager::handleTokenRefresh(QNetworkReply *reply)
         
         saveTokens();
     } else {
-        emit error("Token refresh failed: " + reply->errorString());
+        emit error(makeUserFriendlyError("Token refresh failed: " + reply->errorString()));
         m_isAuthenticated = false;
         emit authenticationChanged(false);
     }
@@ -1245,7 +1302,7 @@ void GoogleDriveManager::handleCreateResponse(QNetworkReply *reply)
 void GoogleDriveManager::createNotesFolder()
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -1256,7 +1313,7 @@ void GoogleDriveManager::createNotesFolder()
 void GoogleDriveManager::findExistingNotesFolder()
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -1284,7 +1341,7 @@ void GoogleDriveManager::findExistingNotesFolder()
 void GoogleDriveManager::createNewNotesFolder()
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     
@@ -1505,7 +1562,7 @@ void GoogleDriveManager::handleListNotesInFolderResponse(QNetworkReply *reply)
 void GoogleDriveManager::syncSingleNote(const QString &noteId, const QString &content, const QString &title, const QString &folderName)
 {
     if (!isAuthenticated()) {
-        emit error("Not authenticated");
+        emit error(makeUserFriendlyError("Not authenticated"));
         return;
     }
     

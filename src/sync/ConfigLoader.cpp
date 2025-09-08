@@ -57,7 +57,9 @@ bool ConfigLoader::loadFromConfigFile()
         QDir::homePath() + "/.notes_app/google_drive_config.ini",  // Home directory
         QDir::currentPath() + "/google_drive_config.ini",  // Root of current directory
         QCoreApplication::applicationDirPath() + "/../config/google_drive_config.ini",  // Relative to executable
-        QCoreApplication::applicationDirPath() + "/../../config/google_drive_config.ini"  // Two levels up from executable
+        QCoreApplication::applicationDirPath() + "/../../config/google_drive_config.ini",  // Two levels up from executable
+        QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/Notes/google_drive_config.ini",  // System data directory
+        "/usr/share/Notes/google_drive_config.ini"  // System-wide installation path
     };
     
     qDebug() << "Current working directory:" << QDir::currentPath();

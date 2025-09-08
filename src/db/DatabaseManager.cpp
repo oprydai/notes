@@ -58,6 +58,8 @@ bool DatabaseManager::open() {
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(databaseFilePath());
     if (!m_db.open()) {
+        QString errorMsg = QString("Unable to open the notes database. This may be due to file permissions or disk space issues.\n\nError details: %1").arg(m_db.lastError().text());
+        emit databaseError(errorMsg);
         qWarning() << "Failed to open database:" << m_db.lastError();
         return false;
     }
@@ -69,6 +71,8 @@ bool DatabaseManager::initializeSchema() {
 
     QSqlQuery q(m_db);
     if (!q.exec(QStringLiteral("PRAGMA foreign_keys = ON;"))) {
+        QString errorMsg = QString("Database initialization failed. The application may not function correctly.\n\nError details: %1").arg(q.lastError().text());
+        emit databaseError(errorMsg);
         qWarning() << "Failed to enable foreign_keys pragma:" << q.lastError();
         return false;
     }
@@ -124,6 +128,8 @@ CREATE TABLE IF NOT EXISTS settings (
         stmt = stmt.trimmed();
         if (stmt.isEmpty()) continue;
         if (!q.exec(stmt + ';')) {
+            QString errorMsg = QString("Failed to initialize database structure. The application may not function correctly.\n\nError details: %1").arg(q.lastError().text());
+            emit databaseError(errorMsg);
             qWarning() << "Failed to run schema statement:" << stmt << "error:" << q.lastError();
             return false;
         }
@@ -235,6 +241,8 @@ int DatabaseManager::createNote(int folderId, const QString &title, const QStrin
     q.addBindValue(QDateTime::currentDateTime());
     
     if (!q.exec()) {
+        QString errorMsg = QString("Unable to create the note. Please check if you have sufficient disk space and try again.\n\nError details: %1").arg(q.lastError().text());
+        emit operationFailed("Create Note", errorMsg);
         qWarning() << "Failed to create note:" << q.lastError();
         return -1;
     }
@@ -259,6 +267,8 @@ bool DatabaseManager::updateNote(int noteId, const QString &title, const QString
     q.addBindValue(noteId);
     
     if (!q.exec()) {
+        QString errorMsg = QString("Unable to save changes to the note. Please try again.\n\nError details: %1").arg(q.lastError().text());
+        emit operationFailed("Update Note", errorMsg);
         qWarning() << "Failed to update note:" << q.lastError();
         return false;
     }
@@ -281,6 +291,8 @@ bool DatabaseManager::deleteNote(int noteId) {
     q.addBindValue(noteId);
     
     if (!q.exec()) {
+        QString errorMsg = QString("Unable to delete the note. Please try again.\n\nError details: %1").arg(q.lastError().text());
+        emit operationFailed("Delete Note", errorMsg);
         qWarning() << "Failed to delete note:" << q.lastError();
         return false;
     }
@@ -408,6 +420,8 @@ int DatabaseManager::createFolder(const QString &name, int parentId) {
     q.addBindValue(parentId > 0 ? parentId : QVariant());
     
     if (!q.exec()) {
+        QString errorMsg = QString("Unable to create the folder. Please try again.\n\nError details: %1").arg(q.lastError().text());
+        emit operationFailed("Create Folder", errorMsg);
         qWarning() << "Failed to create folder:" << q.lastError();
         return -1;
     }
@@ -424,6 +438,8 @@ bool DatabaseManager::updateFolder(int folderId, const QString &name) {
     q.addBindValue(folderId);
     
     if (!q.exec()) {
+        QString errorMsg = QString("Unable to rename the folder. Please try again.\n\nError details: %1").arg(q.lastError().text());
+        emit operationFailed("Update Folder", errorMsg);
         qWarning() << "Failed to update folder:" << q.lastError();
         return false;
     }
@@ -441,6 +457,8 @@ bool DatabaseManager::deleteFolder(int folderId) {
     q.addBindValue(folderId);
     
     if (!q.exec()) {
+        QString errorMsg = QString("Unable to delete the folder. Please try again.\n\nError details: %1").arg(q.lastError().text());
+        emit operationFailed("Delete Folder", errorMsg);
         qWarning() << "Failed to delete folder:" << q.lastError();
         return false;
     }
